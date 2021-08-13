@@ -1,0 +1,18 @@
+internal/modules/cjs/loader.js:883
+  throw err;
+  ^
+
+Error: Cannot find module '/home/xipetechxyz/public_html/node/my_app.js'
+    at Function.Module._resolveFilename (internal/modules/cjs/loader.js:880:15)
+    at Function.Module._load (internal/modules/cjs/loader.js:725:27)
+    at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:72:12)
+    at internal/main/run_main_module.js:17:47 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+npm ERR! missing script: start
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /home/xipetechxyz/.npm/_logs/2021-01-15T04_27_49_715Z-debug.log
+Server is listening on port 8080
+Database is connected
