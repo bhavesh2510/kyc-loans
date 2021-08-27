@@ -1,0 +1,11 @@
+{
+    "arrowParens": "avoid",
+    "semi": false,
+    "singleQuote": true,
+  "singleQuote": true,
+  "vetur.format.defaultFormatterOptions": {
+    "prettier": {
+      "singleQuote": true
+    }
+  }
+}
