@@ -55,6 +55,7 @@ class DocumentsDeclaration extends Component {
     const { history } = this.props;
 
     console.log('complete docs', this.state);
+    const x = JSON.parse(localStorage.getItem('previous_data'));
 
     var id = JSON.parse(localStorage.getItem('kyc_id'));
     var validForm = true;
@@ -126,7 +127,8 @@ class DocumentsDeclaration extends Component {
       );
       formdata.append('signature', this.state.signatureFile[0], '[PROXY]');
       formdata.append('name', `${this.state.shareholder_name}`);
-      formdata.append('id', `${id}`);
+      formdata.append('id', `${x.id}`);
+      formdata.append('status', 'complete');
 
       var requestOptions = {
         method: 'POST',

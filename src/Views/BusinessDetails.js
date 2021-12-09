@@ -8,15 +8,19 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { stat } from 'fs';
 import RestrictUser from './RestrictUser';
+import axios from 'axios';
 toast.configure();
 
 const BusinessDetails = () => {
   const history = useHistory();
   let countryCode = '';
   let company = '';
+  let country = '';
 
   const [error, setError] = useState({});
   //   const { country } = state;
+
+  const x = JSON.parse(localStorage.getItem('previous_data'));
 
   const [state, setState] = useState({
     companynumber: '',
@@ -26,39 +30,64 @@ const BusinessDetails = () => {
     post_code: '',
     vatnumber: '',
     dbalegalname: '',
-    dbaaddress: '',
+    dbaaddress1: '',
+    dbaaddress2: '',
+    dbacity: '',
+    dbapost_code: '',
     websitename: '',
     country: '',
     company_name: '',
   });
 
-  const {
-    companynumber,
-    dateofincorporation,
-    address1,
-    city,
-    post_code,
-    vatnumber,
-    dbalegalname,
-    dbaaddress,
-    websitename,
-    country,
-  } = state;
+  useEffect(() => {
+    if (x) {
+      country = x.country_Incorporation;
+      setState({
+        ...state,
+        companynumber: x.company_number,
+        dateofincorporation: x.incorporation_date,
+        address1: x.address1,
+        city: x.city,
+        post_code: x.post_code,
+        vatnumber: x.vat_number,
+        dbalegalname: x.dbalegalname,
+        dbaaddress: '',
+        websitename: x.website,
+        country: x.country_Incorporation,
+        company_name: x.company_name,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log('state in bd', state);
+  }, [state]);
+
+  // const {
+  //   companynumber,
+  //   dateofincorporation,
+  //   address1,
+  //   city,
+  //   post_code,
+  //   vatnumber,
+  //   dbalegalname,
+  //   dbaaddress,
+  //   websitename,
+  //   country,
+  // } = state;
 
   //   const handleSubmit = handleSubmit.bind(this);
   //   const handleInputChanged = handleInputChanged.bind(this);
   //   const getCompanyData = getCompanyData.bind(this);
   //   const setValues = setValues.bind(this);
 
-  useEffect(() => {
-    console.log('updated state is', state);
-  }, [state]);
-
   const handleSubmit = (e) => {
     // const { history } = this.props;
 
-    const y = JSON.parse(localStorage.getItem('kyc_id'));
-    console.log('x is', y);
+    const id = JSON.parse(localStorage.getItem('kyc_id'));
+    // console.log('x is', y);
+    const finalId = id == null ? x.id : id;
+    console.log('finalId is', finalId);
 
     var validForm = true;
     console.log('check', state.country);
@@ -107,7 +136,7 @@ const BusinessDetails = () => {
       var axios = require('axios');
 
       var data = {
-        id: `${y}`,
+        id: `${finalId}`,
         ip: `${state.ip}`,
         location: `${state.location}`,
         country_Incorporation: `${state.country}`,
@@ -125,38 +154,18 @@ const BusinessDetails = () => {
         dbacity: `${state.dbacity}`,
         dbapost_code: `${state.dbapost_code}`,
         website: `${state.websitename}`,
-        type: '',
-        offered_services: '',
-        annual_turnover: '',
-        card_sales: '',
-        avg_transaction: '',
-        max_amt_per_trans: '',
-        number_of_chargeback: '',
-        new_card_process: '',
-        previous_acquirer: '',
-        account_name: '',
-        bank_name: '',
-        reg_nr: '',
-        account_number: '',
-        iban_number: '',
-        swift_bic: '',
-        sort_code: '',
-        copy_company_registration: '',
-        proof_company_bank: '',
-        passport_share_holder: '',
-        address_proof_share_holder: '',
-        signature: '',
-        name: '',
-        declaration: '',
+        status: 'incomplete',
       };
 
       var config = {
         method: 'put',
-        url: 'http://hrm.zotto.io/api/update',
+        mode: 'no-cors',
+        url: 'http://hrm.zotto.io/api/businessdetails',
         headers: {
           Authorization:
             'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
           'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
         data: data,
       };
@@ -169,6 +178,64 @@ const BusinessDetails = () => {
             autoClose: 1000,
           });
 
+          const prev_data = JSON.parse(localStorage.getItem('previous_data'));
+
+          var axios = require('axios');
+          var data = JSON.stringify({
+            email: `${x.email}`,
+          });
+
+          var config = {
+            method: 'get',
+            mode: 'no-cors',
+            url: `http://pay.cibopay.com/getData/shareholderInfo/regnumber/${state.companynumber}`,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/x-www-form-urlencoded',
+              Cookie: 'ci_session=kihkhpchd8cv0ekcb39q5kll9f97begm',
+            },
+            data: data,
+          };
+
+          axios(config)
+            .then(function (response) {
+              console.log('reg number', response.data.DATA.items);
+              var array_data = [];
+              response.data.DATA.items.map((currentvalue) => {
+                array_data.push({
+                  kyc_id: '',
+
+                  name: currentvalue.name,
+                  percentage: '',
+                  address1: currentvalue.address.address_line_1,
+                  address2: currentvalue.address.address_line_2,
+                  city: '',
+                  zipcode: currentvalue.address.postal_code,
+                  country: currentvalue.address.country,
+                  passport_number: '',
+                  nationality: currentvalue.nationality,
+                  authorised_signatory: '',
+                  beneficial_owner: '',
+                  director: '',
+
+                  email: '',
+                  phone: '',
+                });
+              });
+
+              console.log('data is', array_data);
+              localStorage.setItem(
+                'previous_data_if_available_shareholder',
+                JSON.stringify(array_data)
+              );
+            })
+            .catch(function (error) {
+              localStorage.setItem(
+                'previous_data_if_available_shareholder',
+                JSON.stringify('')
+              );
+            });
+
           history.push(`/business_activities`);
         })
         .catch(function (error) {
@@ -179,27 +246,44 @@ const BusinessDetails = () => {
             autoClose: 5000,
           });
         });
-
-      // Service.update(PostDetails).then(response => {
-      //     if(response.data.status === 200){
-      //         this.props.history.push('/business_activities');
-      //         localStorage.setItem('countryOfIncorporation', this.state.country);
-      //         localStorage.setItem('company_number', this.state.companynumber);
-      //         countryCode = ''; company ='';
-
-      //         localforage.setItem('bus_data', this.state);
-      //     }
-      //     if (response.data.status === 500) {
-      //         let messageObj = response.data.message;
-      //         messageObj.map((message) => toast.error(message))
-      //     }
-      // }).catch(error => {
-      //     this.setState({error: error.response});
-      //     toast.error('Something went wrong !!', {
-      //         position: "top-right", autoClose: 5000,
-      //     })
-      // });
     }
+
+    var axios = require('axios');
+    const email = JSON.parse(localStorage.getItem('add_user'));
+
+    var data = {
+      email: `${email.companyemail}`,
+    };
+
+    var config = {
+      method: 'post',
+      mode: 'no-cors',
+      url: 'http://hrm.zotto.io/api/get',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        Authorization:
+          'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+        'Content-Type': 'application/json',
+      },
+      data: data,
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log('response of get', response.data);
+
+        localStorage.setItem(
+          'previous_data',
+          JSON.stringify(response.data.Kyc)
+        );
+        localStorage.setItem(
+          'previous_data_shareholder',
+          JSON.stringify(response.data.Shareholders)
+        );
+      })
+      .catch(function (error) {
+        console.log('error of get', error);
+      });
   };
 
   const handleInputChanged = (event) => {
@@ -217,16 +301,173 @@ const BusinessDetails = () => {
       cityError: '',
       post_codeError: '',
     });
+    // const prev_data = JSON.parse(localStorage.getItem('add_user'));
+    // console.log('target name', event.target.name);
+    // if (event.target.name == 'companynumber') {
+    //   if (state.country == 'DK') {
+    //     var axios = require('axios');
+    //     var data = JSON.stringify({
+    //       email: `${prev_data.companyemail}`,
+    //     });
+
+    //     var config = {
+    //       method: 'get',
+    //       url: `https://pay.cibopay.com/getData/cvrsearch/regnumber/${event.target.value}`,
+    //       headers: {
+    //         'Content-Type': 'application/x-www-form-urlencoded',
+    //       },
+    //       data: data,
+    //     };
+
+    //     axios(config)
+    //       .then(function (response) {
+    //         console.log('response of new api', response);
+    //         // if (!response.data.error) {
+    //         //   setState({
+    //         //     ...state,
+
+    //         //     dateofincorporation: response.data.startdate
+    //         //       ? response.data.startdate
+    //         //       : '',
+    //         //     address1: response.data.address ? response.data.address : '',
+    //         //     city: response.data.city ? response.data.city : '',
+    //         //     post_code: response.data.zipcode ? response.data.zipcode : '',
+    //         //     vatnumber: response.data.vat ? response.data.vat : '',
+    //         //     company_name: response.data.name ? response.data.name : '',
+    //         //   });
+    //         // }
+    //       })
+    //       .catch(function (error) {
+    //         console.log(error);
+    //       });
+    //   } else if (state.country == 'GB') {
+    //     var axios = require('axios');
+    //     var data = JSON.stringify({
+    //       email: `${prev_data.companyemail}`,
+    //     });
+
+    //     var config = {
+    //       method: 'get',
+    //       url: `https://pay.cibopay.com/getData/search/regnumber/${event.target.value}`,
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //         Cookie: 'ci_session=kihkhpchd8cv0ekcb39q5kll9f97begm',
+    //       },
+    //       data: data,
+    //     };
+
+    //     axios(config)
+    //       .then(function (response) {
+    //         console.log('reg number', response.data.DATA);
+
+    //         if (!response.data.DATA.errors) {
+    //           setState({
+    //             ...state,
+    //             companynumber: response.data.DATA.company_number,
+    //             dateofincorporation: response.data.DATA.date_of_creation,
+    //             address1:
+    //               response.data.DATA.registered_office_address.address_line_1,
+
+    //             post_code:
+    //               response.data.DATA.registered_office_address.postal_code,
+    //             vatnumber: x.vat_number,
+
+    //             company_name: response.data.DATA.company_name,
+    //           });
+    //         }
+    //       })
+    //       .catch(function (error) {
+    //         console.log(error);
+    //       });
+    //   }
+    // }
   };
 
   const getCompanyData = (event) => {
-    if (event.target.name === 'companynumber') {
-      company = event.target.value;
-      getFormData();
+    console.log('data in blur', event.target.value);
+    const prev_data = JSON.parse(localStorage.getItem('add_user'));
+    console.log('target name', event.target.name);
+    if (event.target.name == 'companynumber') {
+      if (state.country == 'DK') {
+        var axios = require('axios');
+        var data = JSON.stringify({
+          email: `${prev_data.companyemail}`,
+        });
+
+        var config = {
+          method: 'get',
+          url: `https://pay.cibopay.com/getData/cvrsearch/regnumber/${event.target.value}`,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Access-Control-Allow-Origin': '*',
+          },
+          data: data,
+        };
+
+        axios(config)
+          .then(function (response) {
+            console.log('response of new api', response);
+            setState({
+              ...state,
+              companynumber: event.target.value,
+              city: response.data.DATA.city,
+              dateofincorporation: response.data.DATA.startdate,
+              address1: response.data.DATA.address,
+
+              post_code: response.data.DATA.zipcode,
+              vatnumber: response.data.DATA.vat,
+
+              company_name: response.data.DATA.name,
+            });
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      } else if (state.country == 'GB') {
+        var axios = require('axios');
+        var data = JSON.stringify({
+          email: `${prev_data.companyemail}`,
+        });
+
+        var config = {
+          mode: 'no-cors',
+          method: 'get',
+          url: `https://pay.cibopay.com/getData/search/regnumber/${event.target.value}`,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Cookie: 'ci_session=kihkhpchd8cv0ekcb39q5kll9f97begm',
+          },
+          data: data,
+        };
+
+        axios(config)
+          .then(function (response) {
+            console.log('reg number', response.data.DATA);
+
+            if (!response.data.DATA.errors) {
+              setState({
+                ...state,
+                companynumber: response.data.DATA.company_number,
+                dateofincorporation: response.data.DATA.date_of_creation,
+                address1:
+                  response.data.DATA.registered_office_address.address_line_1,
+                city: response.data.DATA.registered_office_address.locality,
+                post_code:
+                  response.data.DATA.registered_office_address.postal_code,
+                vatnumber: x.vat_number,
+
+                company_name: response.data.DATA.company_name,
+              });
+            }
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      }
     }
   };
 
-  const getFormData = () => {
+  const getFormData = (company) => {
     if (company && countryCode === 'DK') {
       Service.getData(countryCode, company)
         .then((response) => {
@@ -235,6 +476,7 @@ const BusinessDetails = () => {
           if (!response.data.error) {
             setState({
               ...state,
+
               dateofincorporation: response.data.startdate
                 ? response.data.startdate
                 : '',
@@ -267,8 +509,7 @@ const BusinessDetails = () => {
             company_name: '',
           });
         });
-    }
-    if (company && countryCode === 'GB') {
+    } else if (company && countryCode === 'GB') {
       localforage.removeItem('dk_comp_owners');
       Service.getData(countryCode, company)
         .then((response) => {
@@ -284,19 +525,17 @@ const BusinessDetails = () => {
 
             setState({
               ...state,
-              dateofincorporation: response.data.DATA.date_of_creation
-                ? response.data.DATA.date_of_creation
-                : '',
-              address1: addr_1,
-              address2: addr_2,
-              city: city,
-              post_code: postcode,
-              vatnumber: response.data.DATA.company_number
-                ? response.data.DATA.company_number
-                : '',
-              company_name: response.data.DATA.company_name
-                ? response.data.DATA.company_name
-                : '',
+
+              companynumber: response.data.DATA.company_number,
+              dateofincorporation: response.data.DATA.date_of_creation,
+              address1:
+                response.data.DATA.registered_office_address.address_line_1,
+
+              post_code:
+                response.data.DATA.registered_office_address.postal_code,
+              vatnumber: x.vat_number,
+
+              company_name: response.data.DATA.company_name,
             });
           } else {
             setState({
@@ -325,6 +564,7 @@ const BusinessDetails = () => {
   };
 
   const selectCountry = (val) => {
+    console.log('country val', val);
     setState({ ...state, country: val, countryError: '' });
     countryCode = val;
     getFormData();
@@ -362,38 +602,60 @@ const BusinessDetails = () => {
 
   const [restrict, setrestrict] = useState();
   useEffect(() => {
-    setValues();
-    const x = JSON.parse(localStorage.getItem('business_detail'));
+    // setValues();
+    // const x = JSON.parse(localStorage.getItem('business_detail'));
     const y = JSON.parse(localStorage.getItem('isLoggedIn'));
     console.log('y is', y);
     console.log('y is', restrict);
-
-    if (y == 0) {
-      setrestrict(true);
-    } else if (y == 1) {
-      setrestrict(false);
-    }
+    y == 0 ? setrestrict(true) : setrestrict(false);
+    // if (y == 0) {
+    //   setrestrict(true);
+    // } else if (y == 1) {
+    //   setrestrict(false);
+    // }
     console.log('x is', x);
-    if (x) {
-      setState({
-        ...state,
-        companynumber: x.companynumber,
-        dateofincorporation: x.dateofincorporation,
-        address1: x.address1,
-        city: x.city,
-        post_code: x.post_code,
-        vatnumber: x.vatnumber,
-        dbalegalname: x.dbalegalname,
-        dbaaddress: x.dbaaddress,
-        websitename: x.websitename,
-        country: x.country,
-        company_name: x.company_name,
-      });
-    }
+    // if (x) {
+    //   setState({
+    //     ...state,
+    //     companynumber: x.company_number,
+    //     dateofincorporation: x.incorporation_date,
+    //     address1: x.address1,
+    //     city: x.city,
+    //     post_code: x.post_code,
+    //     vatnumber: x.vat_number,
+    //     dbalegalname: x.dba,
+    //     dbaaddress: x.dbaaddress,
+    //     dbaaddress1: x.dbaaddress1,
+    //     dbaaddress2: x.dbaaddress1,
+    //     dbacity: x.dbacity,
+    //     websitename: x.websitename,
+    //     country: x.country_Incorporation,
+    //     company_name: x.company_name,
+    //   });
+    // } else {
+    //   setState({
+    //     ...state,
+    //     companynumber: '',
+    //     dateofincorporation: '',
+    //     address1: '',
+    //     city: '',
+    //     post_code: '',
+    //     vatnumber: '',
+    //     dbalegalname: '',
+    //     dbaaddress: '',
+    //     dbaaddress1: '',
+    //     dbaaddress2: '',
+    //     dbacity: '',
+    //     websitename: '',
+    //     country: '',
+    //     company_name: '',
+    //   });
+    // }
   }, []);
 
   useEffect(() => {
     localStorage.setItem('business_detail', JSON.stringify(state));
+    console.log('state in bd', state);
   }, [state]);
 
   return (
@@ -418,7 +680,7 @@ const BusinessDetails = () => {
                       <div className='form-floating'>
                         <CountryDropdown
                           className='form-select form-control'
-                          value={country}
+                          value={state.country}
                           valueType='short'
                           onChange={(val) => selectCountry(val)}
                         />
@@ -600,7 +862,11 @@ const BusinessDetails = () => {
                           id='dbalegalname'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.dbalegalname}
+                          value={
+                            state.dbalegalname == 'null'
+                              ? ' '
+                              : state.dbalegalname
+                          }
                           placeholder='DBA (Doing Business As. If different from Legal Name)'
                         />
                         <span className='bar'></span>
@@ -618,7 +884,9 @@ const BusinessDetails = () => {
                           id='dbaaddress1'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.dbaaddress1}
+                          value={
+                            state.dbaaddress1 == 'null' ? '' : state.dbaaddress1
+                          }
                           placeholder='DBA Address'
                         />
                         <span className='bar'></span>
@@ -634,7 +902,9 @@ const BusinessDetails = () => {
                           id='dbaaddress2'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.dbaaddress2}
+                          value={
+                            state.dbaaddress2 == 'null' ? '' : state.dbaaddress2
+                          }
                           placeholder='DBA Address'
                         />
                         <span className='bar'></span>
@@ -650,7 +920,7 @@ const BusinessDetails = () => {
                           id='dbacity'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.dbacity}
+                          value={state.dbacity == 'null' ? '' : state.dbacity}
                           placeholder='DBA City'
                         />
                         <span className='bar'></span>
@@ -667,7 +937,11 @@ const BusinessDetails = () => {
                           id='dbapost_code'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.dbapost_code}
+                          value={
+                            state.dbapost_code == 'null'
+                              ? ''
+                              : state.dbapost_code
+                          }
                           placeholder='DBA Address'
                         />
                         <span className='bar'></span>
@@ -683,7 +957,9 @@ const BusinessDetails = () => {
                           id='websitename'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.websitename}
+                          value={
+                            state.websitename == 'null' ? '' : state.websitename
+                          }
                           placeholder='Website https://'
                         />
                         <span className='bar'></span>

@@ -10,6 +10,7 @@ toast.configure();
 const BusinessActivities = () => {
   // create a ref to store the DOM element
   const history = useHistory();
+  const x = JSON.parse(localStorage.getItem('previous_data'));
 
   const [state, setState] = useState({
     type: '',
@@ -24,6 +25,10 @@ const BusinessActivities = () => {
 
   // handleSubmit = this.handleSubmit.bind(this);
   // this.handleInputChanged = this.handleInputChanged.bind(this);
+
+  useEffect(() => {
+    console.log('state in ba', state);
+  }, [state]);
 
   const handleSubmit = (e) => {
     const y = JSON.parse(localStorage.getItem('kyc_id'));
@@ -90,26 +95,10 @@ const BusinessActivities = () => {
         ? state.number_of_chargeback
         : 0;
       var data = {
-        id: `${y}`,
-        ip: '',
-        location: '',
-        country_Incorporation: '',
-        company_number: '',
-        company_name: '',
-        incorporation_date: '',
-        address1: '',
-        address2: '',
-        city: '',
-        post_code: '',
-        vat_number: '',
-        dba: '',
-        dbaaddress1: '',
-        dbaaddress2: '',
-        dbacity: '',
-        dbapost_code: '',
-        website: '',
+        id: `${x.id}`,
         type: `${state.type}`,
         offered_services: `${state.offered_services}`,
+
         annual_turnover: `${state.annual_turnover}`,
         card_sales: `${state.card_sales}`,
         avg_transaction: `${state.avg_transaction}`,
@@ -117,26 +106,15 @@ const BusinessActivities = () => {
         number_of_chargeback: `${no_of_charge}`,
         new_card_process: `${state.new_card_process}`,
         previous_acquirer: `${state.previous_acquirer}`,
-        account_name: '',
-        bank_name: '',
-        reg_nr: '',
-        account_number: '',
-        iban_number: '',
-        swift_bic: '',
-        sort_code: '',
-        copy_company_registration: '',
-        proof_company_bank: '',
-        passport_share_holder: '',
-        address_proof_share_holder: '',
-        signature: '',
-        name: '',
-        declaration: '',
+        status: 'incomplete',
       };
 
       var config = {
         method: 'put',
-        url: 'http://hrm.zotto.io/api/update',
+        mode: 'no-cors',
+        url: 'http://hrm.zotto.io/api/businessactivities',
         headers: {
+          'Access-Control-Allow-Origin': '*',
           Authorization:
             'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
           'Content-Type': 'application/json',
@@ -179,6 +157,43 @@ const BusinessActivities = () => {
       //     })
       // });
     }
+
+    var axios = require('axios');
+    const email = JSON.parse(localStorage.getItem('add_user'));
+
+    var data = {
+      email: `${email.companyemail}`,
+    };
+
+    var config = {
+      method: 'post',
+      mode: 'no-cors',
+      url: 'http://hrm.zotto.io/api/get',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        Authorization:
+          'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+        'Content-Type': 'application/json',
+      },
+      data: data,
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log('response of get', response.data);
+
+        localStorage.setItem(
+          'previous_data',
+          JSON.stringify(response.data.Kyc)
+        );
+        localStorage.setItem(
+          'previous_data_shareholder',
+          JSON.stringify(response.data.Shareholders)
+        );
+      })
+      .catch(function (error) {
+        console.log('error of get', error);
+      });
   };
 
   const [dropdown, setdropdown] = useState();
@@ -251,7 +266,7 @@ const BusinessActivities = () => {
   const [restrict, setrestrict] = useState();
   useEffect(() => {
     setValues();
-    const x = JSON.parse(localStorage.getItem('business_activities'));
+    // const x = JSON.parse(localStorage.getItem('business_activities'));
     const y = JSON.parse(localStorage.getItem('isLoggedIn'));
     console.log('y is', y);
     console.log('y is', restrict);

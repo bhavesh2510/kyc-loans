@@ -2,7 +2,7 @@
   "name": "kyc",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.3",
@@ -23,6 +23,8 @@
     "react-scripts": "^4.0.1",
     "react-signature-canvas": "^1.0.3",
     "react-toastify": "^6.2.0",
+    "short-unique-id": "^4.4.2",
+    "shortid": "^2.2.16",
     "web-vitals": "^0.2.4"
   },
   "scripts": {

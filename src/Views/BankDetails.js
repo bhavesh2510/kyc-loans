@@ -9,6 +9,9 @@ toast.configure();
 
 const BankDetails = () => {
   // create a ref to store the DOM element
+
+  const x = JSON.parse(localStorage.getItem('previous_data'));
+
   const history = useHistory();
 
   const [state, setState] = useState({
@@ -80,33 +83,7 @@ const BankDetails = () => {
         ? state.number_of_chargeback
         : 0;
       var data = {
-        id: `${y}`,
-        ip: '',
-        location: '',
-        country_Incorporation: '',
-        company_number: '',
-        company_name: '',
-        incorporation_date: '',
-        address1: '',
-        address2: '',
-        city: '',
-        post_code: '',
-        vat_number: '',
-        dba: '',
-        dbaaddress1: '',
-        dbaaddress2: '',
-        dbacity: '',
-        dbapost_code: '',
-        website: '',
-        type: '',
-        offered_services: '',
-        annual_turnover: '',
-        card_sales: '',
-        avg_transaction: '',
-        max_amt_per_trans: '',
-        number_of_chargeback: '',
-        new_card_process: '',
-        previous_acquirer: '',
+        id: `${x.id}`,
         account_name: `${state.account_name}`,
         bank_name: `${state.bank_name}`,
         reg_nr: `${state.reg_nr}`,
@@ -114,22 +91,18 @@ const BankDetails = () => {
         sort_code: `${state.sort_code}`,
         iban_number: `${state.iban_number}`,
         swift_bic: `${state.swift_bic}`,
-        copy_company_registration: '',
-        proof_company_bank: '',
-        passport_share_holder: '',
-        address_proof_share_holder: '',
-        signature: '',
-        name: '',
-        declaration: '',
+        status: 'incomplete',
       };
 
       var config = {
         method: 'put',
-        url: 'http://hrm.zotto.io/api/update',
+        url: 'http://hrm.zotto.io/api/bankdetails',
+        mode: 'no-cors',
         headers: {
           Authorization:
             'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
           'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
         data: data,
       };
@@ -168,6 +141,43 @@ const BankDetails = () => {
       //     })
       // });
     }
+
+    var axios = require('axios');
+    const email = JSON.parse(localStorage.getItem('add_user'));
+
+    var data = {
+      email: `${email.companyemail}`,
+    };
+
+    var config = {
+      method: 'post',
+      url: 'http://hrm.zotto.io/api/get',
+      mode: 'no-cors',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        Authorization:
+          'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+        'Content-Type': 'application/json',
+      },
+      data: data,
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log('response of get', response.data);
+
+        localStorage.setItem(
+          'previous_data',
+          JSON.stringify(response.data.Kyc)
+        );
+        localStorage.setItem(
+          'previous_data_shareholder',
+          JSON.stringify(response.data.Shareholders)
+        );
+      })
+      .catch(function (error) {
+        console.log('error of get', error);
+      });
   };
 
   const verifyIBAN = (event) => {
@@ -226,7 +236,7 @@ const BankDetails = () => {
   const [restrict, setrestrict] = useState();
   useEffect(() => {
     setValues();
-    const x = JSON.parse(localStorage.getItem('bank_details'));
+    // const x = JSON.parse(localStorage.getItem('bank_details'));
     console.log('x is', x);
     const y = JSON.parse(localStorage.getItem('isLoggedIn'));
     console.log('y is', y);
@@ -397,7 +407,9 @@ const BankDetails = () => {
                           name='iban_number'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.iban_number}
+                          value={
+                            state.iban_number == 'null' ? '' : state.iban_number
+                          }
                           onBlur={verifyIBAN}
                           placeholder='IBAN Number'
                         />
@@ -415,7 +427,9 @@ const BankDetails = () => {
                           name='swift_bic'
                           autoComplete='off'
                           onChange={handleInputChanged}
-                          value={state.swift_bic}
+                          value={
+                            state.swift_bic == 'null' ? '' : state.swift_bic
+                          }
                           placeholder='SWIFT/BIC'
                         />
                         <span className='bar'></span>

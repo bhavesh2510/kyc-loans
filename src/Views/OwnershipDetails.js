@@ -3,32 +3,36 @@ import Service from '../services/service';
 import localforage from 'localforage';
 import { toast } from 'react-toastify';
 import RestrictUser from './RestrictUser';
+import ShortUniqueId from 'short-unique-id';
 
 class OwnershipDetails extends Component {
   constructor(props) {
     super(props);
     // create a ref to store the DOM element
     const y = JSON.parse(localStorage.getItem('isLoggedIn'));
+    const shortid = require('shortid');
+
     this.state = {
       id: localStorage.getItem('insert_id'),
       restrict: y == 0 ? false : true,
       shareholders: [
         {
-          nameofshareholder: '',
+          name: '',
           nameofshareholderError: '',
-          shareholderpercentage: '',
+          percentage: '',
           address1: '',
           address2: '',
           city: '',
           zipcode: '',
           country: '',
-          passportnumber: '',
+          passport_number: '',
           nationality: '',
-          emailid: '',
-          phonenumber: '',
+          email: '',
+          phone: '',
           authorised_signatory: false,
           beneficial_owner: false,
           director: false,
+          unique_id: shortid.generate(),
         },
       ],
     };
@@ -56,27 +60,25 @@ class OwnershipDetails extends Component {
 
   handleSubmit = (evt) => {
     const { history } = this.props;
+    const x = JSON.parse(localStorage.getItem('previous_data'));
     evt.preventDefault();
     const kycId = JSON.parse(localStorage.getItem('kyc_id'));
     var invalidForm = false;
     const errors = this.state.shareholders.map(function (shareholder, idx) {
-      if (
-        !shareholder.nameofshareholder ||
-        /\d/.test(shareholder.nameofshareholder)
-      ) {
+      if (!shareholder.name || /\d/.test(shareholder.name)) {
         invalidForm = true;
         return {
           ...shareholder,
           nameofshareholderError: 'Please enter a valid value.',
         };
       }
-      if (!shareholder.shareholderpercentage) {
+      if (!shareholder.percentage) {
         invalidForm = true;
         return {
           ...shareholder,
           shareholderpercentageError: 'This field is required.',
         };
-      } else if (shareholder.shareholderpercentage < 25) {
+      } else if (shareholder.percentage < 25) {
         invalidForm = true;
         return {
           ...shareholder,
@@ -100,7 +102,7 @@ class OwnershipDetails extends Component {
         invalidForm = true;
         return { ...shareholder, countryError: 'This field is required.' };
       }
-      if (!shareholder.passportnumber) {
+      if (!shareholder.passport_number) {
         invalidForm = true;
         return {
           ...shareholder,
@@ -111,14 +113,14 @@ class OwnershipDetails extends Component {
         invalidForm = true;
         return { ...shareholder, nationalityError: 'This field is required.' };
       }
-      if (!shareholder.emailid) {
+      if (!shareholder.email) {
         invalidForm = true;
         return { ...shareholder, emailidError: 'This field is required.' };
       }
       if (
-        !shareholder.phonenumber ||
+        !shareholder.phone ||
         !/^(\+{0,})(\d{0,})([(]{1}\d{1,3}[)]{0,}){0,}(\s?\d+|\+\d{2,3}\s{1}\d+|\d+){1}[\s|-]?\d+([\s|-]?\d+){1,2}(\s){0,}$/gm.test(
-          shareholder.phonenumber
+          shareholder.phone
         )
       ) {
         invalidForm = true;
@@ -136,8 +138,8 @@ class OwnershipDetails extends Component {
     }
     var total_share = 0;
     this.state.shareholders.map(function (shareholder, idx) {
-      if (shareholder.shareholderpercentage !== '') {
-        total_share = total_share + parseInt(shareholder.shareholderpercentage);
+      if (shareholder.rpercentage !== '') {
+        total_share = total_share + parseInt(shareholder.percentage);
       }
       return true;
     });
@@ -153,6 +155,7 @@ class OwnershipDetails extends Component {
     }
 
     const shareholders = this.state;
+    const shortid = require('shortid');
 
     console.log('data of share', shareholders);
     const y = JSON.parse(localStorage.getItem('add_user'));
@@ -160,25 +163,32 @@ class OwnershipDetails extends Component {
     const arrayData = [];
 
     console.log('kyc id is', kycId);
+    const id = JSON.parse(localStorage.getItem('kyc_id'));
+    // console.log('x is', y);
+    const finalId = id == null ? x.id : id;
 
     this.state.shareholders.map((currentvalue) => {
       arrayData.push({
-        kyc_id: `${kycId}`,
-        name: `${currentvalue.nameofshareholder}`,
-        percentage: `${currentvalue.shareholderpercentage}`,
+        kyc_id: `${finalId}`,
+
+        name: `${currentvalue.name}`,
+        percentage: `${currentvalue.percentage}`,
         address1: `${currentvalue.address1}`,
         address2: `${currentvalue.address2}`,
         city: `${currentvalue.city}`,
         zipcode: `${currentvalue.zipcode}`,
         country: `${currentvalue.country}`,
-        passport_number: `${currentvalue.passportnumber}`,
+        passport_number: `${currentvalue.passport_number}`,
         nationality: `${currentvalue.nationality}`,
         authorised_signatory: `${currentvalue.authorised_signatory}`,
         beneficial_owner: `${currentvalue.beneficial_owner}`,
         director: `${currentvalue.director}`,
 
-        email: `${currentvalue.emailid}`,
-        phone: `${currentvalue.phonenumber}`,
+        email: `${currentvalue.email}`,
+        phone: `${currentvalue.phone}`,
+        unique_id: `${
+          currentvalue.unique_id ? currentvalue.unique_id : shortid.generate()
+        }`,
       });
     });
 
@@ -189,10 +199,12 @@ class OwnershipDetails extends Component {
     var config = {
       method: 'post',
       url: 'http://hrm.zotto.io/api/shareholdersadd',
+      mode: 'no-cors',
       headers: {
         Authorization:
           'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
         'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
       },
       data: arrayData,
     };
@@ -204,6 +216,42 @@ class OwnershipDetails extends Component {
           position: 'top-right',
           autoClose: 5000,
         });
+        var axios = require('axios');
+        const email = JSON.parse(localStorage.getItem('add_user'));
+
+        var data = {
+          email: `${email.companyemail}`,
+        };
+
+        var config = {
+          method: 'post',
+          url: 'http://hrm.zotto.io/api/get',
+          mode: 'no-cors',
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+          data: data,
+        };
+
+        axios(config)
+          .then(function (response) {
+            console.log('response of get', response.data);
+
+            localStorage.setItem(
+              'previous_data',
+              JSON.stringify(response.data.Kyc)
+            );
+            localStorage.setItem(
+              'previous_data_shareholder',
+              JSON.stringify(response.data.Shareholders)
+            );
+          })
+          .catch(function (error) {
+            console.log('error of get', error);
+          });
 
         history.push('/documents_declaration');
       })
@@ -233,8 +281,8 @@ class OwnershipDetails extends Component {
   totalPercentage = () => {
     var total_share = 0;
     this.state.shareholders.map(function (shareholder, idx) {
-      if (shareholder.shareholderpercentage !== '') {
-        total_share = total_share + parseInt(shareholder.shareholderpercentage);
+      if (shareholder.percentage !== '') {
+        total_share = total_share + parseInt(shareholder.percentage);
       }
       return true;
     });
@@ -252,18 +300,18 @@ class OwnershipDetails extends Component {
     this.setState({
       shareholders: this.state.shareholders.concat([
         {
-          nameofshareholder: '',
+          name: '',
           nameofshareholderError: '',
-          shareholderpercentage: '',
+          percentage: '',
           address1: '',
           address2: '',
           city: '',
           zipcode: '',
           country: '',
-          passportnumber: '',
+          passport_number: '',
           nationality: '',
-          emailid: '',
-          phonenumber: '',
+          email: '',
+          phone: '',
           authorised_signatory: false,
           beneficial_owner: false,
           director: false,
@@ -337,7 +385,7 @@ class OwnershipDetails extends Component {
                   this.setState({
                     shareholders: [
                       {
-                        nameofshareholder: response.data.DATA.items[i].name,
+                        name: response.data.DATA.items[i].name,
                         nationality: response.data.DATA.items[i].nationality,
                         address1: addr_1,
                         address2: addr_2,
@@ -345,9 +393,9 @@ class OwnershipDetails extends Component {
                         zipcode: postcode,
                         country: country,
                         shareholderpercentage: shareholderper,
-                        emailid: email,
-                        passportnumber: pass_number,
-                        phonenumber: phone_number,
+                        email: email,
+                        passport_number: pass_number,
+                        phone: phone_number,
                         beneficial_owner: ben_owner,
                         director: dir,
                         authorised_signatory: auth_signatory,
@@ -359,17 +407,17 @@ class OwnershipDetails extends Component {
                   this.setState({
                     shareholders: this.state.shareholders.concat([
                       {
-                        nameofshareholder: response.data.DATA.items[i].name,
+                        name: response.data.DATA.items[i].name,
                         nationality: response.data.DATA.items[i].nationality,
                         address1: addr_1,
                         address2: addr_2,
                         city: city,
                         zipcode: postcode,
                         country: country,
-                        shareholderpercentage: shareholderper,
-                        emailid: email,
-                        passportnumber: pass_number,
-                        phonenumber: phone_number,
+                        percentage: shareholderper,
+                        email: email,
+                        passport_number: pass_number,
+                        phone: phone_number,
                         beneficial_owner: ben_owner,
                         director: dir,
                         authorised_signatory: auth_signatory,
@@ -409,17 +457,17 @@ class OwnershipDetails extends Component {
             this.setState({
               shareholders: [
                 {
-                  nameofshareholder: dkOwner[i].name,
+                  name: dkOwner[i].name,
                   nationality: nationality,
                   address1: addr_1,
                   address2: addr_2,
                   city: city,
                   zipcode: postcode,
                   country: country,
-                  shareholderpercentage: shareholderper,
-                  emailid: email,
-                  passportnumber: pass_number,
-                  phonenumber: phone_number,
+                  percentage: shareholderper,
+                  email: email,
+                  passport_number: pass_number,
+                  phone: phone_number,
                   beneficial_owner: ben_owner,
                   director: dir,
                   authorised_signatory: auth_signatory,
@@ -431,11 +479,11 @@ class OwnershipDetails extends Component {
             this.setState({
               shareholders: this.state.shareholders.concat([
                 {
-                  nameofshareholder: dkOwner[i].name,
-                  shareholderpercentage: shareholderper,
-                  emailid: email,
-                  passportnumber: pass_number,
-                  phonenumber: phone_number,
+                  name: dkOwner[i].name,
+                  percentage: shareholderper,
+                  email: email,
+                  passport_number: pass_number,
+                  phone: phone_number,
                   beneficial_owner: ben_owner,
                   director: dir,
                   authorised_signatory: auth_signatory,
@@ -450,17 +498,49 @@ class OwnershipDetails extends Component {
     }
   }
 
-  handleRemoveShareholder = (idx) => () => {
+  handleRemoveShareholder = (idx, shareholder_id) => () => {
+    var axios = require('axios');
+    var data = JSON.stringify({
+      email: 'singhbhavesh609@gmail.com',
+    });
+
+    var config = {
+      method: 'delete',
+      url: `http://hrm.zotto.io/api/shareholderdelete/${shareholder_id}`,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: data,
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
     this.setState({
       shareholders: this.state.shareholders.filter((s, sidx) => idx !== sidx),
     });
   };
   x;
   componentDidMount() {
+    const x = JSON.parse(localStorage.getItem('previous_data_shareholder'));
+    const b = JSON.parse(
+      localStorage.getItem('previous_data_if_available_shareholder')
+    );
+    if (b) {
+      if (b.length > 0) {
+        this.setState({ shareholders: [...b] });
+      }
+    }
+    const shortid = require('shortid');
+
     this.setState({ restrict: !this.state.restrict });
     this.getFormData();
 
-    var x = JSON.parse(localStorage.getItem('ownership_detail'));
+    var a = JSON.parse(localStorage.getItem('ownership_detail'));
     console.log('x is', x);
 
     const y = JSON.parse(localStorage.getItem('isLoggedIn'));
@@ -473,32 +553,44 @@ class OwnershipDetails extends Component {
     // }
 
     if (x) {
-      this.setState({ shareholders: [...x.shareholders] });
+      if (x.length > 0) {
+        this.setState({ shareholders: [...x] });
+      }
       console.log('state at page load', this.state);
-      // x.shareholders.map((curval) => {
-      //   this.setState({
-      //     id: localStorage.getItem('insert_id'),
-      //     shareholders: this.state.shareholders.concat([
-      //       {
-      //         nameofshareholder: curval.nameofshareholder,
-      //         nameofshareholderError: curval.nameofshareholderError,
-      //         shareholderpercentage: curval.shareholderpercentage,
-      //         address1: curval.address1,
-      //         address2: curval.address2,
-      //         city: curval.city,
-      //         zipcode: curval.zipcode,
-      //         country: curval.country,
-      //         passportnumber: curval.passportnumber,
-      //         nationality: curval.nationality,
-      //         emailid: curval.emailid,
-      //         phonenumber: curval.phonenumber,
-      //         authorised_signatory: curval.authorised_signatory,
-      //         beneficial_owner: curval.beneficial_owner,
-      //         director: curval.director,
-      //       },
-      //     ]),
-      //   });
-      // });
+      var axios = require('axios');
+      const email = JSON.parse(localStorage.getItem('add_user'));
+
+      var data = {
+        email: `${email.companyemail}`,
+      };
+
+      var config = {
+        method: 'post',
+        url: 'http://hrm.zotto.io/api/get',
+        headers: {
+          Authorization:
+            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+          'Content-Type': 'application/json',
+        },
+        data: data,
+      };
+
+      axios(config)
+        .then(function (response) {
+          console.log('response of get', response.data);
+
+          localStorage.setItem(
+            'previous_data',
+            JSON.stringify(response.data.Kyc)
+          );
+          localStorage.setItem(
+            'previous_data_shareholder',
+            JSON.stringify(response.data.Shareholders)
+          );
+        })
+        .catch(function (error) {
+          console.log('error of get', error);
+        });
     }
 
     console.log('state is', this.state.restrict);
@@ -539,7 +631,10 @@ class OwnershipDetails extends Component {
                             <hr className='mt-0' />
                             <button
                               type='button'
-                              onClick={this.handleRemoveShareholder(idx)}
+                              onClick={this.handleRemoveShareholder(
+                                idx,
+                                shareholder.id
+                              )}
                               className='btn btn-sm btn-danger'
                             >
                               Delete
@@ -550,9 +645,9 @@ class OwnershipDetails extends Component {
                           <div className='form-floating'>
                             <input
                               type='text'
-                              name='nameofshareholder'
+                              name='name'
                               autoComplete='off'
-                              value={shareholder.nameofshareholder}
+                              value={shareholder.name}
                               onChange={this.handleInputChange(idx)}
                               className='form-control'
                               id='nameofshareholder'
@@ -573,12 +668,12 @@ class OwnershipDetails extends Component {
                             <input
                               type='Number'
                               className='form-control'
-                              name='shareholderpercentage'
+                              name='percentage'
                               autoComplete='off'
                               id='shareholderpercentage'
                               onBlur={this.totalPercentage}
                               onChange={this.handleInputChange(idx)}
-                              value={shareholder.shareholderpercentage}
+                              value={shareholder.percentage}
                               placeholder='Shareholder Percentage *'
                             />
                             <span className='bar'></span>
@@ -700,10 +795,10 @@ class OwnershipDetails extends Component {
                             <input
                               type='text'
                               className='form-control'
-                              name='passportnumber'
+                              name='passport_number'
                               autoComplete='off'
                               id='passportnumber'
-                              value={shareholder.passportnumber}
+                              value={shareholder.passport_number}
                               onChange={this.handleInputChange(idx)}
                               placeholder='Passport Number *'
                             />
@@ -753,7 +848,7 @@ class OwnershipDetails extends Component {
                                 className='form-check-input'
                                 type='checkbox'
                                 checked={
-                                  shareholder.authorised_signatory === true
+                                  shareholder.authorised_signatory === 'true'
                                     ? true
                                     : false
                                 }
@@ -818,8 +913,8 @@ class OwnershipDetails extends Component {
                               className='form-control'
                               autoComplete='off'
                               onChange={this.handleInputChange(idx)}
-                              name='emailid'
-                              value={shareholder.emailid}
+                              name='email'
+                              value={shareholder.email}
                               id='emailid'
                               placeholder='Email'
                             />
@@ -837,10 +932,10 @@ class OwnershipDetails extends Component {
                             <input
                               type='tel'
                               className='form-control'
-                              name='phonenumber'
+                              name='phone'
                               autoComplete='off'
                               id='phonenumber'
-                              value={shareholder.phonenumber}
+                              value={shareholder.phone}
                               onChange={this.handleInputChange(idx)}
                               placeholder='Phone Number'
                             />

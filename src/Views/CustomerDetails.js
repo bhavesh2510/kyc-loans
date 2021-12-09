@@ -32,6 +32,7 @@ class CustomerDetails extends Component {
       emailOtpText: 'Verify',
       ip: '',
       location: '',
+      complete: false,
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleInputChanged = this.handleInputChanged.bind(this);
@@ -45,6 +46,8 @@ class CustomerDetails extends Component {
 
   handleSubmit(e) {
     const { history } = this.props;
+    var Email = this.state.companyemail;
+    localStorage.setItem('isLoggedIn', JSON.stringify(1));
     localStorage.setItem('add_user', JSON.stringify(this.state));
     console.log('state in final', this.state);
     const email = this.state.companyemail;
@@ -69,6 +72,7 @@ class CustomerDetails extends Component {
     var axios = require('axios');
 
     var data = {
+      status: 'incomplete',
       email: `${this.state.companyemail}`,
       comp_phone_no: `${this.state.phonenumber}`,
       ip: `${this.state.ip}`,
@@ -115,11 +119,13 @@ class CustomerDetails extends Component {
 
     var config = {
       method: 'post',
+      mode: 'no-cors',
       url: 'http://hrm.zotto.io/api/add',
       headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
         Authorization:
           'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
-        'Content-Type': 'application/json',
       },
       data: data,
     };
@@ -127,12 +133,13 @@ class CustomerDetails extends Component {
     axios(config)
       .then(function (response) {
         console.log('response of add', response);
+
         localStorage.setItem('kyc_id', JSON.stringify(response.data.kyc_id));
         toast.success('Successfully Registered', {
           position: 'top-right',
           autoClose: 5000,
         });
-        localStorage.setItem('isLoggedIn', JSON.stringify(1));
+        // localStorage.setItem('isLoggedIn', JSON.stringify(1));
 
         history.push(`/business_details`);
       })
@@ -144,45 +151,207 @@ class CustomerDetails extends Component {
           autoClose: 5000,
         });
         console.log('state in catch', email, phn);
+        // localStorage.setItem('isLoggedIn', JSON.stringify(1));
         history.push(`/business_details`);
       });
+
+    //get data
   }
 
-  sendEmailOTP(e) {
-    if (
-      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(this.state.companyemail)
-    ) {
-      this.setState({ emailError: 'Please enter a valid email.' });
-      return;
-    } else {
-      this.setState({ emailError: '' });
-    }
+  getData() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        var axios = require('axios');
+        var getData = JSON.stringify({
+          email: `${this.state.companyemail}`,
+        });
 
-    var formData = new FormData();
-    formData.append('email', this.state.companyemail);
+        console.log('json data', getData);
 
-    Service.emailOTP(formData)
-      .then((response) => {
-        console.log('response of otp', response);
-        if (response.status === 200) {
-          this.setState({
-            emailOtpText: 'Resend',
-            isEmailOTPSend: true,
-            sendEmailOtp: response.data.data,
+        var config = {
+          method: 'post',
+          mode: 'no-cors',
+          url: 'http://hrm.zotto.io/api/get',
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+
+          data: getData,
+        };
+
+        axios(config)
+          .then(function (response) {
+            console.log('response of get', response.data);
+            resolve(response.data.Kyc);
+            localStorage.setItem(
+              'previous_data',
+              JSON.stringify(response.data.Kyc)
+            );
+            localStorage.setItem(
+              'previous_data_shareholder',
+              JSON.stringify(response.data.Shareholders)
+            );
+          })
+          .catch(function (error) {
+            var prevdata = {
+              account_name: null,
+              account_number: null,
+              address1: null,
+              address2: null,
+              address_proof_share_holder: null,
+              annual_turnover: null,
+              avg_transaction: null,
+              bank_name: null,
+              card_sales: null,
+              city: null,
+              comp_phone_no: null,
+              company_id: null,
+              company_name: null,
+              company_number: null,
+              copy_company_registration: null,
+              country_Incorporation: null,
+              created_at: null,
+              dba: null,
+              dbaaddress1: null,
+              dbaaddress2: null,
+              dbacity: null,
+              dbapost_code: null,
+              declaration: null,
+              email: null,
+              iban_number: null,
+              id: null,
+              incorporation_date: null,
+              ip: null,
+              lead_status: null,
+              location: null,
+              max_amt_per_trans: null,
+              name: null,
+              new_card_process: null,
+              number_of_chargeback: null,
+              offered_services: null,
+              passport_share_holder: null,
+              post_code: null,
+              previous_acquirer: null,
+              proof_company_bank: null,
+              reg_nr: null,
+              signature: null,
+              sort_code: null,
+              status: null,
+              swift_bic: null,
+              type: null,
+              vat_number: null,
+              website: null,
+            };
+            localStorage.setItem('previous_data', JSON.stringify(prevdata));
+            resolve('error');
           });
-          toast.success('OTP has been sent.', {
+      }, 2000);
+    });
+  }
+
+  async sendEmailOTP(e) {
+    const result = await this.getData();
+    var axios = require('axios');
+
+    if (result == 'error') {
+      if (
+        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
+          this.state.companyemail
+        )
+      ) {
+        this.setState({ emailError: 'Please enter a valid email.' });
+        return;
+      } else {
+        this.setState({ emailError: '' });
+      }
+
+      var formData = new FormData();
+      formData.append('email', this.state.companyemail);
+
+      Service.emailOTP(formData)
+        .then((response) => {
+          console.log('response of otp', response);
+          if (response.status === 200) {
+            this.setState({
+              emailOtpText: 'Resend',
+              isEmailOTPSend: true,
+              sendEmailOtp: response.data.data,
+            });
+            toast.success('OTP has been sent.', {
+              position: 'top-right',
+              autoClose: 5000,
+            });
+          }
+          console.log('response of otp', this.state);
+        })
+        .catch((error) => {
+          this.setState({ error: error.response });
+        });
+    } else {
+      if (result.status == 'complete') {
+        toast.success(
+          'Your kyc is already completed. Our executive will get in touch with you soon.',
+          {
             position: 'top-right',
             autoClose: 5000,
-          });
+          }
+        );
+      } else {
+        // this.setState({
+        //   emailOtpText: 'Resend',
+        //   isEmailOTPSend: true,
+        //   sendEmailOtp: '',
+        // });
+        // toast.success('OTP has been sent.', {
+        //   position: 'top-right',
+        //   autoClose: 5000,
+        // });
+
+        if (
+          !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
+            this.state.companyemail
+          )
+        ) {
+          this.setState({ emailError: 'Please enter a valid email.' });
+          return;
+        } else {
+          this.setState({ emailError: '' });
         }
-        console.log('response of otp', this.state);
-      })
-      .catch((error) => {
-        this.setState({ error: error.response });
-      });
+
+        var formData = new FormData();
+        formData.append('email', this.state.companyemail);
+
+        Service.emailOTP(formData)
+          .then((response) => {
+            console.log('response of otp', response);
+            if (response.status === 200) {
+              this.setState({
+                emailOtpText: 'Resend',
+                isEmailOTPSend: true,
+                sendEmailOtp: response.data.data,
+              });
+              toast.success('OTP has been sent.', {
+                position: 'top-right',
+                autoClose: 5000,
+              });
+            }
+            console.log('response of otp', this.state);
+          })
+          .catch((error) => {
+            this.setState({ error: error.response });
+          });
+      }
+    }
   }
 
   sendPhoneOTP(e) {
+    // this.setState({
+    //   phoneOtpText: 'Resend',
+    //   isMobileOTPSend: true,
+    //   sendMobileOtp: '',
+    // });
+
     if (
       !/^(\+{0,})(\d{0,})([(]{1}\d{1,3}[)]{0,}){0,}(\s?\d+|\+\d{2,3}\s{1}\d+|\d+){1}[\s|-]?\d+([\s|-]?\d+){1,2}(\s){0,}$/gm.test(
         this.state.phonenumber
@@ -217,6 +386,12 @@ class CustomerDetails extends Component {
   }
 
   verifyEmailOTP(e) {
+    // this.setState({
+    //   emailOTPVerified: true,
+    //   emailOtpText: 'Confirmed',
+    //   isEmailOTPSend: false,
+    // });
+    localStorage.setItem('Emailverified', true);
     if (this.state.sendEmailOtp === md5(this.state.userEmailotp)) {
       this.setState({
         emailOTPVerified: true,
@@ -238,6 +413,12 @@ class CustomerDetails extends Component {
   }
 
   verifyMobileOTP(e) {
+    // this.setState({
+    //   mobileOTPVerified: true,
+    //   phoneOtpText: 'Confirmed',
+    //   isMobileOTPSend: false,
+    // });
+    localStorage.setItem('Phoneverified', true);
     if (this.state.sendMobileOtp === md5(this.state.userMobileotp)) {
       this.setState({
         mobileOTPVerified: true,
@@ -275,7 +456,7 @@ class CustomerDetails extends Component {
   componentDidMount() {
     localStorage.clear();
     localforage.clear();
-    localStorage.setItem('isLoggedIn', JSON.stringify(0));
+    localStorage.setItem('isLoggedIn', JSON.stringify(0)); //0
     Service.getIpData()
       .then((response) => {
         if (response.status === 200) {
@@ -314,6 +495,7 @@ class CustomerDetails extends Component {
                     id='companyemail'
                     placeholder='name@example.com'
                     onChange={this.handleInputChanged}
+                    value={this.state.companyemail}
                     readOnly={this.state.emailOTPVerified ? true : false}
                   />
                   <label htmlFor='companyemail'>

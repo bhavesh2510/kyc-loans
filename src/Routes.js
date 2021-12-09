@@ -14,7 +14,7 @@ class Routes extends React.Component {
   render() {
     return (
       <Switch>
-        <Route exact path='/customer_details' component={CustomerDetails} />
+        <Route exact path='/' component={CustomerDetails} />
         <Route exact path='/business_details' component={BusinessDetails} />
         <Route
           exact
