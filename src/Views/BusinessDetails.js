@@ -1,67 +1,61 @@
-import React, { Component, useEffect, useState } from 'react';
-import Service from '../services/service';
-import { CountryDropdown } from 'react-country-region-selector';
-import localforage from 'localforage';
-import { useHistory } from 'react-router';
+import React, { Component, useEffect, useState } from 'react'
+import Service from '../services/service'
+import { CountryDropdown } from 'react-country-region-selector'
+import localforage from 'localforage'
+import { useHistory } from 'react-router'
 
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { stat } from 'fs';
-import RestrictUser from './RestrictUser';
-import axios from 'axios';
-toast.configure();
+import { toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import { stat } from 'fs'
+import RestrictUser from './RestrictUser'
+import axios from 'axios'
+
+toast.configure()
 
 const BusinessDetails = () => {
-  const history = useHistory();
-  let countryCode = '';
-  let company = '';
-  let country = '';
+  const history = useHistory()
+  let countryCode = ''
+  let company = ''
+  let country = ''
 
-  const [error, setError] = useState({});
+  const [error, setError] = useState({})
   //   const { country } = state;
 
-  const x = JSON.parse(localStorage.getItem('previous_data'));
+  const x = JSON.parse(localStorage.getItem('previous_data'))
 
   const [state, setState] = useState({
-    companynumber: '',
-    dateofincorporation: '',
-    address1: '',
-    city: '',
-    post_code: '',
-    vatnumber: '',
-    dbalegalname: '',
-    dbaaddress1: '',
-    dbaaddress2: '',
-    dbacity: '',
-    dbapost_code: '',
-    websitename: '',
-    country: '',
-    company_name: '',
-  });
+    companyname: '',
+    company_registration_no: '',
+    company_phn_no: '',
+    company_email: '',
+    trading_address: '',
+    type_of_entity: '',
+    business_classifications: ''
+  })
 
   useEffect(() => {
-    if (x) {
-      country = x.country_Incorporation;
-      setState({
-        ...state,
-        companynumber: x.company_number,
-        dateofincorporation: x.incorporation_date,
-        address1: x.address1,
-        city: x.city,
-        post_code: x.post_code,
-        vatnumber: x.vat_number,
-        dbalegalname: x.dbalegalname,
-        dbaaddress: '',
-        websitename: x.website,
-        country: x.country_Incorporation,
-        company_name: x.company_name,
-      });
-    }
-  }, []);
+    // if (x) {
+    //   country = x.country_Incorporation;
+    //   setState({
+    //     ...state,
+    //     companynumber: x.company_number,
+    //     dateofincorporation: x.incorporation_date,
+    //     address1: x.address1,
+    //     city: x.city,
+    //     post_code: x.post_code,
+    //     vatnumber: x.vat_number,
+    //     dbalegalname: x.dbalegalname,
+    //     dbaaddress: '',
+    //     websitename: x.website,
+    //     country: x.country_Incorporation,
+    //     company_name: x.company_name,
+    //   });
+    // }
+  }, [])
 
   useEffect(() => {
-    console.log('state in bd', state);
-  }, [state]);
+    console.log('state in bd', state)
+  }, [state])
 
   // const {
   //   companynumber,
@@ -82,225 +76,55 @@ const BusinessDetails = () => {
   //   const setValues = setValues.bind(this);
 
   const handleSubmit = (e) => {
-    // const { history } = this.props;
+    e.preventDefault()
+    var validForm = true
+    console.log('check', state.country)
+    history.push('/principal_owner')
+    return
 
-    const id = JSON.parse(localStorage.getItem('kyc_id'));
-    // console.log('x is', y);
-    const finalId = id == null ? x.id : id;
-    console.log('finalId is', finalId);
+    if (!state.company_registration_no) {
+      setError({ ...error, comp_regi_error: 'This field is required.' })
+      validForm = false
+    }
+    if (!state.companyname) {
+      setError({ ...error, comp_name_error: 'This field is required.' })
+      validForm = false
+    }
 
-    var validForm = true;
-    console.log('check', state.country);
-    e.preventDefault();
-    if (!state.country) {
-      setError({ ...error, countryError: 'This field is required.' });
-      validForm = false;
-    }
-    if (!state.companynumber) {
-      setError({ ...error, companynumberError: 'This field is required.' });
-      validForm = false;
-    }
-    if (!state.dateofincorporation) {
+    if (!state.trading_address) {
       setError({
         ...error,
-        dateofincorporationError: 'This field is required.',
-      });
-      validForm = false;
+        trading_error: 'This field is required.'
+      })
+      validForm = false
     }
-    if (!state.address1 == true) {
-      setError({ ...error, address1Error: 'This field is required.' });
-      validForm = false;
+    if (!state.business_classifications) {
+      setError({ ...error, classification_error: 'This field is required.' })
+      validForm = false
     }
-    if (!state.city) {
-      setError({ ...error, cityError: 'This field is required.' });
-      validForm = false;
-    }
-    if (!state.post_code) {
-      setError({ ...error, post_codeError: 'This field is required.' });
-      validForm = false;
-    }
-    if (!state.vatnumber) {
-      setError({ ...error, vatnumberError: 'This field is required.' });
-      validForm = false;
-    }
-    if (/\d/.test(state.city)) {
-      setError({ ...error, cityError: 'Please enter a valid value.' });
-      validForm = false;
-    }
-    if (/\d/.test(state.dbacity)) {
-      setError({ ...error, dbacityError: 'Please enter a valid value.' });
-      validForm = false;
+    if (!state.type_of_entity) {
+      setError({ ...error, entity_error: 'This field is required.' })
+      validForm = false
     }
 
     if (validForm) {
-      var axios = require('axios');
-
-      var data = {
-        id: `${finalId}`,
-        ip: `${state.ip}`,
-        location: `${state.location}`,
-        country_Incorporation: `${state.country}`,
-        company_number: `${state.companynumber}`,
-        company_name: `${state.company_name}`,
-        incorporation_date: `${state.dateofincorporation}`,
-        address1: `${state.address1}`,
-        address2: `${state.address2}`,
-        city: `${state.city}`,
-        post_code: `${state.post_code}`,
-        vat_number: `${state.vatnumber}`,
-        dba: `${state.dbalegalname}`,
-        dbaaddress1: `${state.dbaaddress1}`,
-        dbaaddress2: `${state.dbaaddress2}`,
-        dbacity: `${state.dbacity}`,
-        dbapost_code: `${state.dbapost_code}`,
-        website: `${state.websitename}`,
-        status: 'incomplete',
-      };
-
-      var config = {
-        method: 'put',
-        mode: 'no-cors',
-        url: 'http://hrm.zotto.io/api/businessdetails',
-        headers: {
-          Authorization:
-            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        data: data,
-      };
-
-      axios(config)
-        .then(function (response) {
-          console.log('response of update', response);
-          toast.success('Records added successfully', {
-            position: 'top-right',
-            autoClose: 1000,
-          });
-
-          const prev_data = JSON.parse(localStorage.getItem('previous_data'));
-
-          var axios = require('axios');
-          var data = JSON.stringify({
-            email: `${x.email}`,
-          });
-
-          var config = {
-            method: 'get',
-            mode: 'no-cors',
-            url: `http://pay.cibopay.com/getData/shareholderInfo/regnumber/${state.companynumber}`,
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              'Content-Type': 'application/x-www-form-urlencoded',
-              Cookie: 'ci_session=kihkhpchd8cv0ekcb39q5kll9f97begm',
-            },
-            data: data,
-          };
-
-          axios(config)
-            .then(function (response) {
-              console.log('reg number', response.data.DATA.items);
-              var array_data = [];
-              response.data.DATA.items.map((currentvalue) => {
-                array_data.push({
-                  kyc_id: '',
-
-                  name: currentvalue.name,
-                  percentage: '',
-                  address1: currentvalue.address.address_line_1,
-                  address2: currentvalue.address.address_line_2,
-                  city: '',
-                  zipcode: currentvalue.address.postal_code,
-                  country: currentvalue.address.country,
-                  passport_number: '',
-                  nationality: currentvalue.nationality,
-                  authorised_signatory: '',
-                  beneficial_owner: '',
-                  director: '',
-
-                  email: '',
-                  phone: '',
-                });
-              });
-
-              console.log('data is', array_data);
-              localStorage.setItem(
-                'previous_data_if_available_shareholder',
-                JSON.stringify(array_data)
-              );
-            })
-            .catch(function (error) {
-              localStorage.setItem(
-                'previous_data_if_available_shareholder',
-                JSON.stringify('')
-              );
-            });
-
-          history.push(`/business_activities`);
-        })
-        .catch(function (error) {
-          console.log('response of add', error);
-
-          toast.error('Something went wrong.', {
-            position: 'top-right',
-            autoClose: 5000,
-          });
-        });
+      history.push('/business_activities')
     }
-
-    var axios = require('axios');
-    const email = JSON.parse(localStorage.getItem('add_user'));
-
-    var data = {
-      email: `${email.companyemail}`,
-    };
-
-    var config = {
-      method: 'post',
-      mode: 'no-cors',
-      url: 'http://hrm.zotto.io/api/get',
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        Authorization:
-          'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
-        'Content-Type': 'application/json',
-      },
-      data: data,
-    };
-
-    axios(config)
-      .then(function (response) {
-        console.log('response of get', response.data);
-
-        localStorage.setItem(
-          'previous_data',
-          JSON.stringify(response.data.Kyc)
-        );
-        localStorage.setItem(
-          'previous_data_shareholder',
-          JSON.stringify(response.data.Shareholders)
-        );
-      })
-      .catch(function (error) {
-        console.log('error of get', error);
-      });
-  };
+  }
 
   const handleInputChanged = (event) => {
     setState({
       ...state,
-      [event.target.name]: event.target.value,
-    });
+      [event.target.name]: event.target.value
+    })
     setError({
       ...error,
-      companynumberError: '',
-      dbacityError: '',
-      dateofincorporationError: '',
-      address1Error: '',
-      vatnumberError: '',
-      cityError: '',
-      post_codeError: '',
-    });
+      comp_name_error: '',
+      comp_regi_error: '',
+      trading_error: '',
+      entity_error: '',
+      classification_error: ''
+    })
     // const prev_data = JSON.parse(localStorage.getItem('add_user'));
     // console.log('target name', event.target.name);
     // if (event.target.name == 'companynumber') {
@@ -381,32 +205,32 @@ const BusinessDetails = () => {
     //       });
     //   }
     // }
-  };
+  }
 
   const getCompanyData = (event) => {
-    console.log('data in blur', event.target.value);
-    const prev_data = JSON.parse(localStorage.getItem('add_user'));
-    console.log('target name', event.target.name);
+    console.log('data in blur', event.target.value)
+    const prev_data = JSON.parse(localStorage.getItem('add_user'))
+    console.log('target name', event.target.name)
     if (event.target.name == 'companynumber') {
       if (state.country == 'DK') {
-        var axios = require('axios');
+        var axios = require('axios')
         var data = JSON.stringify({
-          email: `${prev_data.companyemail}`,
-        });
+          email: `${prev_data.companyemail}`
+        })
 
         var config = {
           method: 'get',
           url: `https://pay.cibopay.com/getData/cvrsearch/regnumber/${event.target.value}`,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': '*'
           },
-          data: data,
-        };
+          data: data
+        }
 
         axios(config)
           .then(function (response) {
-            console.log('response of new api', response);
+            console.log('response of new api', response)
             setState({
               ...state,
               companynumber: event.target.value,
@@ -417,17 +241,17 @@ const BusinessDetails = () => {
               post_code: response.data.DATA.zipcode,
               vatnumber: response.data.DATA.vat,
 
-              company_name: response.data.DATA.name,
-            });
+              company_name: response.data.DATA.name
+            })
           })
           .catch(function (error) {
-            console.log(error);
-          });
+            console.log(error)
+          })
       } else if (state.country == 'GB') {
-        var axios = require('axios');
+        var axios = require('axios')
         var data = JSON.stringify({
-          email: `${prev_data.companyemail}`,
-        });
+          email: `${prev_data.companyemail}`
+        })
 
         var config = {
           mode: 'no-cors',
@@ -435,14 +259,14 @@ const BusinessDetails = () => {
           url: `https://pay.cibopay.com/getData/search/regnumber/${event.target.value}`,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Cookie: 'ci_session=kihkhpchd8cv0ekcb39q5kll9f97begm',
+            Cookie: 'ci_session=kihkhpchd8cv0ekcb39q5kll9f97begm'
           },
-          data: data,
-        };
+          data: data
+        }
 
         axios(config)
           .then(function (response) {
-            console.log('reg number', response.data.DATA);
+            console.log('reg number', response.data.DATA)
 
             if (!response.data.DATA.errors) {
               setState({
@@ -456,23 +280,23 @@ const BusinessDetails = () => {
                   response.data.DATA.registered_office_address.postal_code,
                 vatnumber: x.vat_number,
 
-                company_name: response.data.DATA.company_name,
-              });
+                company_name: response.data.DATA.company_name
+              })
             }
           })
           .catch(function (error) {
-            console.log(error);
-          });
+            console.log(error)
+          })
       }
     }
-  };
+  }
 
   const getFormData = (company) => {
     if (company && countryCode === 'DK') {
       Service.getData(countryCode, company)
         .then((response) => {
-          localforage.removeItem('dk_comp_owners');
-          localforage.setItem('dk_comp_owners', response.data.owners);
+          localforage.removeItem('dk_comp_owners')
+          localforage.setItem('dk_comp_owners', response.data.owners)
           if (!response.data.error) {
             setState({
               ...state,
@@ -484,8 +308,8 @@ const BusinessDetails = () => {
               city: response.data.city ? response.data.city : '',
               post_code: response.data.zipcode ? response.data.zipcode : '',
               vatnumber: response.data.vat ? response.data.vat : '',
-              company_name: response.data.name ? response.data.name : '',
-            });
+              company_name: response.data.name ? response.data.name : ''
+            })
           } else {
             setState({
               ...state,
@@ -494,8 +318,8 @@ const BusinessDetails = () => {
               city: '',
               post_code: '',
               vatnumber: '',
-              company_name: '',
-            });
+              company_name: ''
+            })
           }
         })
         .catch((error) => {
@@ -506,22 +330,22 @@ const BusinessDetails = () => {
             city: '',
             post_code: '',
             vatnumber: '',
-            company_name: '',
-          });
-        });
+            company_name: ''
+          })
+        })
     } else if (company && countryCode === 'GB') {
-      localforage.removeItem('dk_comp_owners');
+      localforage.removeItem('dk_comp_owners')
       Service.getData(countryCode, company)
         .then((response) => {
           if (!response.data.DATA.errors) {
             let addr_1 =
-              response.data.DATA.registered_office_address.address_line_1 || '';
+              response.data.DATA.registered_office_address.address_line_1 || ''
             let addr_2 =
-              response.data.DATA.registered_office_address.address_line_2 || '';
+              response.data.DATA.registered_office_address.address_line_2 || ''
             let postcode =
-              response.data.DATA.registered_office_address.postal_code || '';
+              response.data.DATA.registered_office_address.postal_code || ''
             let city =
-              response.data.DATA.registered_office_address.locality || '';
+              response.data.DATA.registered_office_address.locality || ''
 
             setState({
               ...state,
@@ -535,8 +359,8 @@ const BusinessDetails = () => {
                 response.data.DATA.registered_office_address.postal_code,
               vatnumber: x.vat_number,
 
-              company_name: response.data.DATA.company_name,
-            });
+              company_name: response.data.DATA.company_name
+            })
           } else {
             setState({
               ...state,
@@ -545,8 +369,8 @@ const BusinessDetails = () => {
               address2: '',
               post_code: '',
               vatnumber: '',
-              company_name: '',
-            });
+              company_name: ''
+            })
           }
         })
         .catch((error) => {
@@ -557,25 +381,25 @@ const BusinessDetails = () => {
             address2: '',
             post_code: '',
             vatnumber: '',
-            company_name: '',
-          });
-        });
+            company_name: ''
+          })
+        })
     }
-  };
+  }
 
   const selectCountry = (val) => {
-    console.log('country val', val);
-    setState({ ...state, country: val, countryError: '' });
-    countryCode = val;
-    getFormData();
-  };
+    console.log('country val', val)
+    setState({ ...state, country: val, countryError: '' })
+    countryCode = val
+    getFormData()
+  }
 
   const setValues = (e) => {
     // let self = this;
     localforage
       .getItem('bus_data')
       .then(function (value) {
-        countryCode = value.country;
+        countryCode = value.country
         setState({
           ...state,
           companynumber: value.companynumber,
@@ -592,28 +416,28 @@ const BusinessDetails = () => {
           dbaaddress2: value.dbaaddress2,
           dbacity: value.dbacity,
           dbapost_code: value.dbapost_code,
-          websitename: value.websitename,
-        });
+          websitename: value.websitename
+        })
       })
       .catch(function (err) {
-        console.log(err);
-      });
-  };
+        console.log(err)
+      })
+  }
 
-  const [restrict, setrestrict] = useState();
+  const [restrict, setrestrict] = useState()
   useEffect(() => {
     // setValues();
     // const x = JSON.parse(localStorage.getItem('business_detail'));
-    const y = JSON.parse(localStorage.getItem('isLoggedIn'));
-    console.log('y is', y);
-    console.log('y is', restrict);
-    y == 0 ? setrestrict(true) : setrestrict(false);
+    const y = JSON.parse(localStorage.getItem('isLoggedIn'))
+    console.log('y is', y)
+    console.log('y is', restrict)
+    y == 0 ? setrestrict(true) : setrestrict(false)
     // if (y == 0) {
     //   setrestrict(true);
     // } else if (y == 1) {
     //   setrestrict(false);
     // }
-    console.log('x is', x);
+    console.log('x is', x)
     // if (x) {
     //   setState({
     //     ...state,
@@ -651,12 +475,12 @@ const BusinessDetails = () => {
     //     company_name: '',
     //   });
     // }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    localStorage.setItem('business_detail', JSON.stringify(state));
-    console.log('state in bd', state);
-  }, [state]);
+    localStorage.setItem('business_detail', JSON.stringify(state))
+    console.log('state in bd', state)
+  }, [state])
 
   return (
     <>
@@ -673,10 +497,10 @@ const BusinessDetails = () => {
 
                 <form onSubmit={handleSubmit}>
                   <h4 className='pb-4 fs-2 text-center fw-bold'>
-                    Business Details
+                    Business Information
                   </h4>
                   <div className='row justify-content-center g-3'>
-                    <div className='col-md-6 col-xl-5'>
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <CountryDropdown
                           className='form-select form-control'
@@ -691,29 +515,27 @@ const BusinessDetails = () => {
                           <strong className='text-danger'>*</strong>
                         </label>
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
                           className='form-control'
-                          name='companynumber'
-                          id='companynumber'
+                          name='company_registration_no'
+                          id='company_registration_no'
                           onChange={handleInputChanged}
-                          onBlur={getCompanyData}
-                          placeholder='Company Name'
+                          // onBlur={getCompanyData}
+                          placeholder='Company Number'
                           autoComplete='off'
-                          value={state.companynumber}
+                          value={state.company_registration_no}
                         />
                         <span className='bar'></span>
-                        <label htmlFor='companynumber'>
+                        <label htmlFor='company_registration_no'>
                           Company Number
                           <strong className='text-danger'>*</strong>
                         </label>
-                        <div className='form-text'>
-                          {error.companynumberError}
-                        </div>
+                        <div className='form-text'>{error.comp_regi_error}</div>
                       </div>
                     </div>
 
@@ -722,24 +544,22 @@ const BusinessDetails = () => {
                         <input
                           type='text'
                           className='form-control'
-                          name='company_name'
-                          id='company_name'
+                          name='companyname'
+                          id='companyname'
                           onChange={handleInputChanged}
                           placeholder='Company Name'
                           autoComplete='off'
-                          value={state.company_name}
+                          value={state.companyname}
                         />
                         <span className='bar'></span>
-                        <label htmlFor='company_name'>
+                        <label htmlFor='companyname'>
                           Company Name<strong className='text-danger'>*</strong>
                         </label>
-                        <div className='form-text'>
-                          {error.company_nameError}
-                        </div>
+                        <div className='form-text'>{error.comp_name_error}</div>
                       </div>
                     </div>
 
-                    <div className='col-md-6 col-xl-5'>
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
@@ -757,8 +577,8 @@ const BusinessDetails = () => {
                         </label>
                         <div className='form-text'>{error.vatnumberError}</div>
                       </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
+                    </div> */}
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
@@ -779,62 +599,92 @@ const BusinessDetails = () => {
                           {error.dateofincorporationError}
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                     <div className='col-md-6 col-xl-5'>
                       <div className='form-floating overflow-hidden'>
                         <input
                           type='text'
                           className='form-control'
-                          name='address1'
+                          name='trading_address'
                           id='address1'
                           onChange={handleInputChanged}
                           placeholder='Legal Address'
                           autoComplete='off'
-                          value={state.address1}
+                          value={state.trading_address}
                         />
                         <span className='bar'></span>
                         <label htmlFor='address1'>
-                          Address Line 1{' '}
+                          Trading Address{' '}
                           <strong className='text-danger'>*</strong>
                         </label>
-                        <div className='form-text'>{error.address1Error}</div>
+                        <div className='form-text'>{error.trading_error}</div>
                       </div>
                     </div>
                     <div className='col-md-6 col-xl-5'>
-                      <div className='form-floating overflow-hidden'>
-                        <input
-                          type='text'
-                          className='form-control'
-                          name='address2'
-                          id='address2'
-                          onChange={handleInputChanged}
-                          placeholder='Legal Address'
-                          value={state.address2}
-                        />
-                        <span className='bar'></span>
-                        <label htmlFor='address2'>Address Line 2</label>
-                      </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
-                      <div className='form-floating overflow-hidden'>
-                        <input
-                          type='text'
-                          className='form-control'
-                          name='city'
-                          id='city'
+                      <div className='form-floating'>
+                        <select
+                          defaultValue={'DEFAULT'}
+                          className='form-select form-control'
+                          name='business_classifications'
                           autoComplete='off'
+                          value={state.business_classifications}
+                          id='type'
                           onChange={handleInputChanged}
-                          placeholder='Legal Address'
-                          value={state.city}
-                        />
+                          // onChange={handleTypeOfBusiness}
+                          aria-label='Floating label select example'
+                        >
+                          <option value=''>Select Type</option>
+                          <option value='pub'>Pub/Bar</option>
+                          <option value='restaurant' name='restaurant'>
+                            Restaurant
+                          </option>
+                          <option value='hotel'>Hotel/B&B</option>
+                          <option value='hair'>Hair & Beauty</option>
+                        </select>
+                        <span className='highlight'></span>
                         <span className='bar'></span>
-                        <label htmlFor='city'>
-                          City<strong className='text-danger'>*</strong>
+                        <label htmlFor='type'>
+                          Business Classifications{' '}
+                          <strong className='text-danger'>*</strong>
                         </label>
-                        <div className='form-text'>{error.cityError}</div>
+                        <div className='form-text'>
+                          {error.classification_error}
+                        </div>
                       </div>
                     </div>
                     <div className='col-md-6 col-xl-5'>
+                      <div className='form-floating'>
+                        <select
+                          defaultValue={'DEFAULT'}
+                          className='form-select form-control'
+                          name='type_of_entity'
+                          autoComplete='off'
+                          value={state.type_of_entity}
+                          id='type'
+                          onChange={handleInputChanged}
+                          // onChange={handleTypeOfBusiness}
+                          aria-label='Floating label select example'
+                        >
+                          <option value=''>Select Type</option>
+                          <option value='soleproprietor'>
+                            Sole proprietor
+                          </option>
+                          <option value='partnership' name='retail'>
+                            Partnership
+                          </option>
+                          <option value='limitedco'>Limited co</option>
+                          <option value='other'>Other</option>
+                        </select>
+                        <span className='highlight'></span>
+                        <span className='bar'></span>
+                        <label htmlFor='type'>
+                          Type of Entity
+                          <strong className='text-danger'>*</strong>
+                        </label>
+                        <div className='form-text'>{error.entity_error}</div>
+                      </div>
+                    </div>
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating overflow-hidden'>
                         <input
                           type='text'
@@ -852,8 +702,8 @@ const BusinessDetails = () => {
                         </label>
                         <div className='form-text'>{error.post_codeError}</div>
                       </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
+                    </div> */}
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
@@ -874,8 +724,8 @@ const BusinessDetails = () => {
                           DBA (Doing Business As. If different from Legal Name)
                         </label>
                       </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
+                    </div> */}
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
@@ -892,8 +742,8 @@ const BusinessDetails = () => {
                         <span className='bar'></span>
                         <label htmlFor='dbaaddress1'>DBA Address Line 1</label>
                       </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
+                    </div> */}
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
@@ -910,8 +760,8 @@ const BusinessDetails = () => {
                         <span className='bar'></span>
                         <label htmlFor='dbaaddress2'>DBA Address Line 2</label>
                       </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
+                    </div> */}
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
@@ -927,8 +777,8 @@ const BusinessDetails = () => {
                         <label htmlFor='dbacity'>DBA City</label>
                         <div className='form-text'>{error.dbacityError}</div>
                       </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
+                    </div> */}
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='text'
@@ -947,8 +797,8 @@ const BusinessDetails = () => {
                         <span className='bar'></span>
                         <label htmlFor='dbapost_code'>DBA Post code</label>
                       </div>
-                    </div>
-                    <div className='col-md-6 col-xl-5'>
+                    </div> */}
+                    {/* <div className='col-md-6 col-xl-5'>
                       <div className='form-floating'>
                         <input
                           type='url'
@@ -965,7 +815,7 @@ const BusinessDetails = () => {
                         <span className='bar'></span>
                         <label htmlFor='websitename'>Website</label>
                       </div>
-                    </div>
+                    </div> */}
                     <div className='col-md-12 col-xl-5'></div>
                     <div className='col-md-12 col-xl-5'>
                       <input
@@ -983,9 +833,9 @@ const BusinessDetails = () => {
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default BusinessDetails;
+export default BusinessDetails
 
 //chrome.exe --disable-web-security --user-data-dir="c:/ChromeDevSession

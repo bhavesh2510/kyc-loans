@@ -1,14 +1,16 @@
-import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import React from 'react'
+import { Route, Switch } from 'react-router-dom'
 import {
   CustomerDetails,
   BusinessDetails,
-  BusinessActivities,
-  BankDetails,
+  PrincipalOwner,
   OwnershipDetails,
+  ProcessingInformation,
   DocumentsDeclaration,
-} from './Views';
-import KycSuccess from './Views/KycSuccess';
+  MerchantQuestionnaire
+} from './Views'
+import KycSuccess from './Views/KycSuccess'
+import BusinessProperty from './Views/BusinessProperty'
 
 class Routes extends React.Component {
   render() {
@@ -16,13 +18,18 @@ class Routes extends React.Component {
       <Switch>
         <Route exact path='/' component={CustomerDetails} />
         <Route exact path='/business_details' component={BusinessDetails} />
+        <Route exact path='/principal_owner' component={PrincipalOwner} />
+        <Route exact path='/business_property' component={BusinessProperty} />
         <Route
           exact
-          path='/business_activities'
-          component={BusinessActivities}
+          path='/processing_information'
+          component={ProcessingInformation}
         />
-        <Route exact path='/bank_details' component={BankDetails} />
-        <Route exact path='/ownership_details' component={OwnershipDetails} />
+        <Route
+          exact
+          path='/merchant_question'
+          component={MerchantQuestionnaire}
+        />
         <Route
           exact
           path='/documents_declaration'
@@ -30,8 +37,8 @@ class Routes extends React.Component {
         />
         <Route exact path='/kyc_success' component={KycSuccess} />
       </Switch>
-    );
+    )
   }
 }
 
-export default Routes;
+export default Routes

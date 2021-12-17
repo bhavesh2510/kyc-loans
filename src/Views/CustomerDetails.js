@@ -1,20 +1,20 @@
-import React, { Component, useEffect } from 'react';
+import React, { Component, useEffect } from 'react'
 
-import Service from '../services/service';
-import $ from 'jquery';
-import localforage from 'localforage';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/bootstrap.css';
+import Service from '../services/service'
+import $ from 'jquery'
+import localforage from 'localforage'
+import PhoneInput from 'react-phone-input-2'
+import 'react-phone-input-2/lib/bootstrap.css'
 
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-toast.configure();
+import { toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+toast.configure()
 
-var md5 = require('md5');
+var md5 = require('md5')
 
 class CustomerDetails extends Component {
   constructor(props) {
-    super(props);
+    super(props)
     // create a ref to store the DOM element
 
     this.state = {
@@ -32,227 +32,43 @@ class CustomerDetails extends Component {
       emailOtpText: 'Verify',
       ip: '',
       location: '',
-      complete: false,
-    };
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleInputChanged = this.handleInputChanged.bind(this);
-    this.sendEmailOTP = this.sendEmailOTP.bind(this);
-    this.sendPhoneOTP = this.sendPhoneOTP.bind(this);
-    this.verifyEmailOTP = this.verifyEmailOTP.bind(this);
-    this.verifyMobileOTP = this.verifyMobileOTP.bind(this);
+      complete: false
+    }
+    this.handleSubmit = this.handleSubmit.bind(this)
+    this.handleInputChanged = this.handleInputChanged.bind(this)
+    this.sendEmailOTP = this.sendEmailOTP.bind(this)
+    this.sendPhoneOTP = this.sendPhoneOTP.bind(this)
+    this.verifyEmailOTP = this.verifyEmailOTP.bind(this)
+    this.verifyMobileOTP = this.verifyMobileOTP.bind(this)
 
-    console.log('state is', this.state);
+    console.log('state is', this.state)
   }
 
   handleSubmit(e) {
-    const { history } = this.props;
-    var Email = this.state.companyemail;
-    localStorage.setItem('isLoggedIn', JSON.stringify(1));
-    localStorage.setItem('add_user', JSON.stringify(this.state));
-    console.log('state in final', this.state);
-    const email = this.state.companyemail;
-    const phn = this.state.phonenumber;
-    e.preventDefault();
-    if (this.state.companyemail === '') {
-      this.setState({ emailError: 'Please enter a valid email.' });
-      return;
-    }
-    if (this.state.phonenumber === '') {
-      this.setState({ phoneError: 'Please enter a mobile number.' });
-      return;
-    }
-    // var axios = require("axios");
-    // const PostDetails = {
-    //   // ip: this.state.ip,
-    //   // location: this.state.location,
-    //   // email: this.state.companyemail,
-    //   // comp_phone_no: this.state.phonenumber,
-    // };
-
-    var axios = require('axios');
-
-    var data = {
-      status: 'incomplete',
-      email: `${this.state.companyemail}`,
-      comp_phone_no: `${this.state.phonenumber}`,
-      ip: `${this.state.ip}`,
-      location: `${this.state.location}`,
-      country_Incorporation: '',
-      company_number: '',
-      company_name: '',
-      incorporation_date: '',
-      address1: '',
-      address2: '',
-      city: '',
-      post_code: '',
-      vat_number: '',
-      dba: '',
-      dbaaddress1: '',
-      dbaaddress2: '',
-      dbacity: '',
-      dbapost_code: '',
-      website: '',
-      type: '',
-      offered_services: '',
-      annual_turnover: '',
-      card_sales: '',
-      avg_transaction: '',
-      max_amt_per_trans: '',
-      number_of_chargeback: '',
-      new_card_process: '',
-      previous_acquirer: '',
-      account_name: '',
-      bank_name: '',
-      reg_nr: '',
-      account_number: '',
-      iban_number: '',
-      swift_bic: '',
-      sort_code: '',
-      copy_company_registration: '',
-      proof_company_bank: '',
-      passport_share_holder: '',
-      address_proof_share_holder: '',
-      signature: '',
-      name: '',
-      declaration: '',
-    };
-
-    var config = {
-      method: 'post',
-      mode: 'no-cors',
-      url: 'http://hrm.zotto.io/api/add',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        Authorization:
-          'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
-      },
-      data: data,
-    };
-
-    axios(config)
-      .then(function (response) {
-        console.log('response of add', response);
-
-        localStorage.setItem('kyc_id', JSON.stringify(response.data.kyc_id));
-        toast.success('Successfully Registered', {
-          position: 'top-right',
-          autoClose: 5000,
-        });
-        // localStorage.setItem('isLoggedIn', JSON.stringify(1));
-
-        history.push(`/business_details`);
-      })
-      .catch(function (error) {
-        console.log('response of add', error);
-
-        toast.error('Email or phone is already registered.', {
-          position: 'top-right',
-          autoClose: 5000,
-        });
-        console.log('state in catch', email, phn);
-        // localStorage.setItem('isLoggedIn', JSON.stringify(1));
-        history.push(`/business_details`);
-      });
-
-    //get data
+    const { history } = this.props
+    var Email = this.state.companyemail
+    localStorage.setItem('isLoggedIn', JSON.stringify(1))
+    localStorage.setItem('add_user', JSON.stringify(this.state))
+    console.log('state in final', this.state)
+    const email = this.state.companyemail
+    const phn = this.state.phonenumber
+    e.preventDefault()
+    history.push('/business_details')
+    // if (this.state.companyemail === '') {
+    //   this.setState({ emailError: 'Please enter a valid email.' })
+    //   return
+    // }
+    // if (this.state.phonenumber === '') {
+    //   this.setState({ phoneError: 'Please enter a mobile number.' })
+    //   return
+    // }
   }
 
-  getData() {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        var axios = require('axios');
-        var getData = JSON.stringify({
-          email: `${this.state.companyemail}`,
-        });
-
-        console.log('json data', getData);
-
-        var config = {
-          method: 'post',
-          mode: 'no-cors',
-          url: 'http://hrm.zotto.io/api/get',
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-
-          data: getData,
-        };
-
-        axios(config)
-          .then(function (response) {
-            console.log('response of get', response.data);
-            resolve(response.data.Kyc);
-            localStorage.setItem(
-              'previous_data',
-              JSON.stringify(response.data.Kyc)
-            );
-            localStorage.setItem(
-              'previous_data_shareholder',
-              JSON.stringify(response.data.Shareholders)
-            );
-          })
-          .catch(function (error) {
-            var prevdata = {
-              account_name: null,
-              account_number: null,
-              address1: null,
-              address2: null,
-              address_proof_share_holder: null,
-              annual_turnover: null,
-              avg_transaction: null,
-              bank_name: null,
-              card_sales: null,
-              city: null,
-              comp_phone_no: null,
-              company_id: null,
-              company_name: null,
-              company_number: null,
-              copy_company_registration: null,
-              country_Incorporation: null,
-              created_at: null,
-              dba: null,
-              dbaaddress1: null,
-              dbaaddress2: null,
-              dbacity: null,
-              dbapost_code: null,
-              declaration: null,
-              email: null,
-              iban_number: null,
-              id: null,
-              incorporation_date: null,
-              ip: null,
-              lead_status: null,
-              location: null,
-              max_amt_per_trans: null,
-              name: null,
-              new_card_process: null,
-              number_of_chargeback: null,
-              offered_services: null,
-              passport_share_holder: null,
-              post_code: null,
-              previous_acquirer: null,
-              proof_company_bank: null,
-              reg_nr: null,
-              signature: null,
-              sort_code: null,
-              status: null,
-              swift_bic: null,
-              type: null,
-              vat_number: null,
-              website: null,
-            };
-            localStorage.setItem('previous_data', JSON.stringify(prevdata));
-            resolve('error');
-          });
-      }, 2000);
-    });
-  }
+  getData() {}
 
   async sendEmailOTP(e) {
-    const result = await this.getData();
-    var axios = require('axios');
+    const result = await this.getData()
+    var axios = require('axios')
 
     if (result == 'error') {
       if (
@@ -260,43 +76,43 @@ class CustomerDetails extends Component {
           this.state.companyemail
         )
       ) {
-        this.setState({ emailError: 'Please enter a valid email.' });
-        return;
+        this.setState({ emailError: 'Please enter a valid email.' })
+        return
       } else {
-        this.setState({ emailError: '' });
+        this.setState({ emailError: '' })
       }
 
-      var formData = new FormData();
-      formData.append('email', this.state.companyemail);
+      var formData = new FormData()
+      formData.append('email', this.state.companyemail)
 
       Service.emailOTP(formData)
         .then((response) => {
-          console.log('response of otp', response);
+          console.log('response of otp', response)
           if (response.status === 200) {
             this.setState({
               emailOtpText: 'Resend',
               isEmailOTPSend: true,
-              sendEmailOtp: response.data.data,
-            });
+              sendEmailOtp: response.data.data
+            })
             toast.success('OTP has been sent.', {
               position: 'top-right',
-              autoClose: 5000,
-            });
+              autoClose: 5000
+            })
           }
-          console.log('response of otp', this.state);
+          console.log('response of otp', this.state)
         })
         .catch((error) => {
-          this.setState({ error: error.response });
-        });
+          this.setState({ error: error.response })
+        })
     } else {
       if (result.status == 'complete') {
         toast.success(
           'Your kyc is already completed. Our executive will get in touch with you soon.',
           {
             position: 'top-right',
-            autoClose: 5000,
+            autoClose: 5000
           }
-        );
+        )
       } else {
         // this.setState({
         //   emailOtpText: 'Resend',
@@ -313,34 +129,34 @@ class CustomerDetails extends Component {
             this.state.companyemail
           )
         ) {
-          this.setState({ emailError: 'Please enter a valid email.' });
-          return;
+          this.setState({ emailError: 'Please enter a valid email.' })
+          return
         } else {
-          this.setState({ emailError: '' });
+          this.setState({ emailError: '' })
         }
 
-        var formData = new FormData();
-        formData.append('email', this.state.companyemail);
+        var formData = new FormData()
+        formData.append('email', this.state.companyemail)
 
         Service.emailOTP(formData)
           .then((response) => {
-            console.log('response of otp', response);
+            console.log('response of otp', response)
             if (response.status === 200) {
               this.setState({
                 emailOtpText: 'Resend',
                 isEmailOTPSend: true,
-                sendEmailOtp: response.data.data,
-              });
+                sendEmailOtp: response.data.data
+              })
               toast.success('OTP has been sent.', {
                 position: 'top-right',
-                autoClose: 5000,
-              });
+                autoClose: 5000
+              })
             }
-            console.log('response of otp', this.state);
+            console.log('response of otp', this.state)
           })
           .catch((error) => {
-            this.setState({ error: error.response });
-          });
+            this.setState({ error: error.response })
+          })
       }
     }
   }
@@ -358,13 +174,13 @@ class CustomerDetails extends Component {
       ) ||
       this.state.phonenumber.length < 9
     ) {
-      this.setState({ mobileError: 'Please enter a valid phone number.' });
-      return;
+      this.setState({ mobileError: 'Please enter a valid phone number.' })
+      return
     } else {
-      this.setState({ mobileError: '' });
+      this.setState({ mobileError: '' })
     }
-    var formData = new FormData();
-    formData.append('mobile', '+' + this.state.phonenumber);
+    var formData = new FormData()
+    formData.append('mobile', '+' + this.state.phonenumber)
 
     Service.phoneOTP(formData)
       .then((response) => {
@@ -372,17 +188,17 @@ class CustomerDetails extends Component {
           this.setState({
             phoneOtpText: 'Resend',
             isMobileOTPSend: true,
-            sendMobileOtp: response.data.data,
-          });
+            sendMobileOtp: response.data.data
+          })
           toast.success('OTP has been sent.', {
             position: 'top-right',
-            autoClose: 5000,
-          });
+            autoClose: 5000
+          })
         }
       })
       .catch((error) => {
-        this.setState({ error: error.response });
-      });
+        this.setState({ error: error.response })
+      })
   }
 
   verifyEmailOTP(e) {
@@ -391,24 +207,24 @@ class CustomerDetails extends Component {
     //   emailOtpText: 'Confirmed',
     //   isEmailOTPSend: false,
     // });
-    localStorage.setItem('Emailverified', true);
+    localStorage.setItem('Emailverified', true)
     if (this.state.sendEmailOtp === md5(this.state.userEmailotp)) {
       this.setState({
         emailOTPVerified: true,
         emailOtpText: 'Confirmed',
-        isEmailOTPSend: false,
-      });
-      localStorage.setItem('Emailverified', true);
-      $('.btn-sendotp.email').attr('disabled', true);
+        isEmailOTPSend: false
+      })
+      localStorage.setItem('Emailverified', true)
+      $('.btn-sendotp.email').attr('disabled', true)
       toast.success('Email has been verified.', {
         position: 'top-right',
-        autoClose: 5000,
-      });
+        autoClose: 5000
+      })
     } else {
       toast.error('Please enter correct OTP to verify email.', {
         position: 'top-right',
-        autoClose: 5000,
-      });
+        autoClose: 5000
+      })
     }
   }
 
@@ -418,45 +234,45 @@ class CustomerDetails extends Component {
     //   phoneOtpText: 'Confirmed',
     //   isMobileOTPSend: false,
     // });
-    localStorage.setItem('Phoneverified', true);
+    localStorage.setItem('Phoneverified', true)
     if (this.state.sendMobileOtp === md5(this.state.userMobileotp)) {
       this.setState({
         mobileOTPVerified: true,
         phoneOtpText: 'Confirmed',
-        isMobileOTPSend: false,
-      });
-      localStorage.setItem('Phoneverified', true);
-      $('.btn-sendotp.phone').attr('disabled', true);
+        isMobileOTPSend: false
+      })
+      localStorage.setItem('Phoneverified', true)
+      $('.btn-sendotp.phone').attr('disabled', true)
       toast.success('Phone number has been verified.', {
         position: 'top-right',
-        autoClose: 5000,
-      });
-      $('.btn-sendotp.phone').show();
+        autoClose: 5000
+      })
+      $('.btn-sendotp.phone').show()
     } else {
       toast.error('Please enter correct OTP to verify phone number.', {
         position: 'top-right',
-        autoClose: 5000,
-      });
+        autoClose: 5000
+      })
     }
   }
 
   handleInputChanged(event) {
     this.setState({
-      [event.target.name]: event.target.value,
-    });
+      [event.target.name]: event.target.value
+    })
     if (event.target.name === 'companyemail') {
       this.setState({
         isEmailOTPSend: false,
         emailOTPVerified: false,
-        emailOtpText: 'Verify',
-      });
+        emailOtpText: 'Verify'
+      })
     }
   }
 
   componentDidMount() {
-    localStorage.clear();
-    localforage.clear();
-    localStorage.setItem('isLoggedIn', JSON.stringify(0)); //0
+    localStorage.clear()
+    localforage.clear()
+    localStorage.setItem('isLoggedIn', JSON.stringify(0)) //0
     Service.getIpData()
       .then((response) => {
         if (response.status === 200) {
@@ -467,11 +283,11 @@ class CustomerDetails extends Component {
               ',' +
               response.data.region +
               ',' +
-              response.data.country_name,
-          });
+              response.data.country_name
+          })
         }
       })
-      .catch((error) => {});
+      .catch((error) => {})
   }
 
   render() {
@@ -520,7 +336,7 @@ class CustomerDetails extends Component {
                       inputProps={{
                         name: 'phonenumber',
                         readOnly: this.state.mobileOTPVerified ? true : false,
-                        autoComplete: 'off',
+                        autoComplete: 'off'
                       }}
                       enableSearch='true'
                       country={'gb'}
@@ -531,7 +347,7 @@ class CustomerDetails extends Component {
                           phonenumber,
                           isMobileOTPSend: false,
                           mobileOTPVerified: false,
-                          phoneOtpText: 'Verify',
+                          phoneOtpText: 'Verify'
                         })
                       }
                     />
@@ -593,24 +409,22 @@ class CustomerDetails extends Component {
                 ) : (
                   ''
                 )}
-                {this.state.emailOTPVerified && this.state.mobileOTPVerified ? (
+                {/* {this.state.emailOTPVerified && this.state.mobileOTPVerified ? (
                   <button
                     type='submit'
                     className='btn btn-primary w-100 btn-lg'
                   >
                     Submit
                   </button>
-                ) : (
-                  <button className='btn btn-primary w-100 btn-lg' disabled>
-                    Submit
-                  </button>
-                )}
+                ) : ( */}
+                <button className='btn btn-primary w-100 btn-lg'>Submit</button>
+                {/* )} */}
               </form>
             </div>
           </div>
         </div>
       </div>
-    );
+    )
   }
 }
-export default CustomerDetails;
+export default CustomerDetails

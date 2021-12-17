@@ -16,6 +16,7 @@
     "query-string": "^7.0.1",
     "react": "^17.0.1",
     "react-country-region-selector": "^3.0.1",
+    "react-datepicker": "^4.5.0",
     "react-dom": "^17.0.1",
     "react-phone-input-2": "^2.13.9",
     "react-router": "^5.2.0",

@@ -1,10 +1,17 @@
-import CustomerDetails from './CustomerDetails';
-import BusinessDetails from './BusinessDetails';
-import BusinessActivities from './BusinessActivities';
-import BankDetails from './BankDetails';
-import OwnershipDetails from './OwnershipDetails';
-import DocumentsDeclaration from './DocumentsDeclaration';
+import CustomerDetails from './CustomerDetails'
+import BusinessDetails from './BusinessDetails'
+import PrincipalOwner from './PrincipalOwner'
+import BusinessProperty from './BusinessProperty'
+import ProcessingInformation from './ProcessingInformation'
+import DocumentsDeclaration from './DocumentsDeclaration'
+import MerchantQuestionnaire from './MerchantQuestionnaire'
 
 export {
-    CustomerDetails,BusinessDetails,BusinessActivities,BankDetails,OwnershipDetails,DocumentsDeclaration
-};
+  CustomerDetails,
+  BusinessDetails,
+  PrincipalOwner,
+  BusinessProperty,
+  ProcessingInformation,
+  MerchantQuestionnaire,
+  DocumentsDeclaration
+}
