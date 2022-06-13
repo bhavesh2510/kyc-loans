@@ -22,7 +22,7 @@ const Service = {
     return axios.post('https://pay.cibopay.com/Sendotp/sendotpmobile', data);
   },
   getIpData: () => {
-    return axios.get('https://ipapi.co/json/');
+    return axios.get('https://geolocation-db.com/json/');
   },
   validateIBAN: (iban_no) => {
     return axios.get('https://openiban.com/validate/' + iban_no);

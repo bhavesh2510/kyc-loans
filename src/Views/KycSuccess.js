@@ -8,7 +8,7 @@ const KycSuccess = () => {
             height: '200px',
             width: '200px',
             background: '#eeecfb',
-            margin: '0 auto',
+            margin: '0 auto'
           }}
         >
           <i className='i-for-kycsuccess checkmark'>✓</i>
@@ -18,10 +18,10 @@ const KycSuccess = () => {
           You have successfully completed
         </h3>
         <h3 className='heading-for-kycsuccess' style={{ textAlign: 'center' }}>
-          KYC process!
+          Loan application process!
         </h3>
       </div>
     </>
-  );
-};
-export default KycSuccess;
+  )
+}
+export default KycSuccess

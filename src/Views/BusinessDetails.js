@@ -24,34 +24,12 @@ const BusinessDetails = () => {
   const x = JSON.parse(localStorage.getItem('previous_data'))
 
   const [state, setState] = useState({
-    companyname: '',
-    company_registration_no: '',
-    company_phn_no: '',
-    company_email: '',
+    company_name: '',
+    company_no: '',
     trading_address: '',
-    type_of_entity: '',
-    business_classifications: ''
+    type_entity: '',
+    business_classification_type: ''
   })
-
-  useEffect(() => {
-    // if (x) {
-    //   country = x.country_Incorporation;
-    //   setState({
-    //     ...state,
-    //     companynumber: x.company_number,
-    //     dateofincorporation: x.incorporation_date,
-    //     address1: x.address1,
-    //     city: x.city,
-    //     post_code: x.post_code,
-    //     vatnumber: x.vat_number,
-    //     dbalegalname: x.dbalegalname,
-    //     dbaaddress: '',
-    //     websitename: x.website,
-    //     country: x.country_Incorporation,
-    //     company_name: x.company_name,
-    //   });
-    // }
-  }, [])
 
   useEffect(() => {
     console.log('state in bd', state)
@@ -79,37 +57,122 @@ const BusinessDetails = () => {
     e.preventDefault()
     var validForm = true
     console.log('check', state.country)
-    history.push('/principal_owner')
-    return
-
-    if (!state.company_registration_no) {
+    if (!state.company_no || state.company_no == '.') {
       setError({ ...error, comp_regi_error: 'This field is required.' })
       validForm = false
     }
-    if (!state.companyname) {
+    if (!state.company_name || state.company_name == '.') {
       setError({ ...error, comp_name_error: 'This field is required.' })
       validForm = false
     }
 
-    if (!state.trading_address) {
+    if (!state.trading_address || state.trading_address == '.') {
       setError({
         ...error,
         trading_error: 'This field is required.'
       })
       validForm = false
     }
-    if (!state.business_classifications) {
+    if (
+      !state.business_classification_type ||
+      state.business_classification_type == '.'
+    ) {
       setError({ ...error, classification_error: 'This field is required.' })
       validForm = false
     }
-    if (!state.type_of_entity) {
+    if (!state.type_entity || state.type_entity == '.') {
       setError({ ...error, entity_error: 'This field is required.' })
       validForm = false
     }
 
     if (validForm) {
-      history.push('/business_activities')
+      var axios = require('axios')
+      const id = JSON.parse(localStorage.getItem('kyc_id'))
+
+      const finalId = id == null ? x.id : id
+      console.log('finalId is', finalId)
+      var data = {
+        id: `${finalId}`,
+        company_no: `${state.company_no}`,
+        company_name: `${state.company_name}`,
+        trading_address: `${state.trading_address}`,
+        business_classfication_type: `${state.business_classification_type}`,
+        type_entity: `${state.type_entity}`,
+
+        status: 'incomplete'
+      }
+
+      var config = {
+        method: 'put',
+        url: 'https://hrm.zotto.io/api/business-information',
+        mode: 'no-cors',
+        headers: {
+          Authorization:
+            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        data: data
+      }
+
+      axios(config)
+        .then(function (response) {
+          console.log('response of update', response)
+          toast.success('Records added successfully', {
+            position: 'top-right',
+            autoClose: 1000
+          })
+
+          history.push('/principal_owner')
+        })
+        .catch(function (error) {
+          setState({ ...state, error: error })
+          toast.error('Something went wrong !!', {
+            position: 'top-right',
+            autoClose: 5000
+          })
+        })
     }
+    //get
+    var axios = require('axios')
+    const email = JSON.parse(localStorage.getItem('add_user'))
+    const companyId = JSON.parse(localStorage.getItem('company_id'))
+    var data = {
+      company_email: `${email.companyemail}`,
+      company_id: `${companyId}`
+    }
+
+    var config = {
+      method: 'post',
+      mode: 'no-cors',
+      url: 'https://hrm.zotto.io/api/loans-get',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        Authorization:
+          'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+        'Content-Type': 'application/json'
+      },
+      data: data
+    }
+
+    axios(config)
+      .then(function (response) {
+        console.log('response of get', response.data)
+
+        localStorage.setItem(
+          'previous_data',
+          JSON.stringify(response.data.Loans)
+        )
+        if (response.data.Applicant) {
+          localStorage.setItem(
+            'ownership_data',
+            JSON.stringify(response.data.Loans)
+          )
+        }
+      })
+      .catch(function (error) {
+        console.log('error of get', error)
+      })
   }
 
   const handleInputChanged = (event) => {
@@ -438,43 +501,25 @@ const BusinessDetails = () => {
     //   setrestrict(false);
     // }
     console.log('x is', x)
-    // if (x) {
-    //   setState({
-    //     ...state,
-    //     companynumber: x.company_number,
-    //     dateofincorporation: x.incorporation_date,
-    //     address1: x.address1,
-    //     city: x.city,
-    //     post_code: x.post_code,
-    //     vatnumber: x.vat_number,
-    //     dbalegalname: x.dba,
-    //     dbaaddress: x.dbaaddress,
-    //     dbaaddress1: x.dbaaddress1,
-    //     dbaaddress2: x.dbaaddress1,
-    //     dbacity: x.dbacity,
-    //     websitename: x.websitename,
-    //     country: x.country_Incorporation,
-    //     company_name: x.company_name,
-    //   });
-    // } else {
-    //   setState({
-    //     ...state,
-    //     companynumber: '',
-    //     dateofincorporation: '',
-    //     address1: '',
-    //     city: '',
-    //     post_code: '',
-    //     vatnumber: '',
-    //     dbalegalname: '',
-    //     dbaaddress: '',
-    //     dbaaddress1: '',
-    //     dbaaddress2: '',
-    //     dbacity: '',
-    //     websitename: '',
-    //     country: '',
-    //     company_name: '',
-    //   });
-    // }
+    if (x) {
+      setState({
+        ...state,
+        company_name: x.company_name,
+        company_no: x.company_no,
+        trading_address: x.trading_address,
+        type_entity: x.type_entity,
+        business_classification_type: x.business_classfication_type
+      })
+    } else {
+      setState({
+        ...state,
+        company_name: '',
+        company_no: '',
+        trading_address: '',
+        type_entity: '',
+        business_classification_type: ''
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -492,7 +537,7 @@ const BusinessDetails = () => {
             <div className='row justify-content-center align-items-center h-100'>
               <div className='col-sm-12 py-4'>
                 <div className='text-center steping'>
-                  <span>Step 2 of 6</span>
+                  <span>Step 2 of 7</span>
                 </div>
 
                 <form onSubmit={handleSubmit}>
@@ -522,16 +567,18 @@ const BusinessDetails = () => {
                         <input
                           type='text'
                           className='form-control'
-                          name='company_registration_no'
-                          id='company_registration_no'
+                          name='company_no'
+                          id='company_no'
                           onChange={handleInputChanged}
                           // onBlur={getCompanyData}
                           placeholder='Company Number'
                           autoComplete='off'
-                          value={state.company_registration_no}
+                          value={
+                            state.company_no == '.' ? '' : state.company_no
+                          }
                         />
                         <span className='bar'></span>
-                        <label htmlFor='company_registration_no'>
+                        <label htmlFor='company_no'>
                           Company Number
                           <strong className='text-danger'>*</strong>
                         </label>
@@ -544,62 +591,23 @@ const BusinessDetails = () => {
                         <input
                           type='text'
                           className='form-control'
-                          name='companyname'
-                          id='companyname'
+                          name='company_name'
+                          id='company_name'
                           onChange={handleInputChanged}
                           placeholder='Company Name'
                           autoComplete='off'
-                          value={state.companyname}
+                          value={
+                            state.company_name == '.' ? '' : state.company_name
+                          }
                         />
                         <span className='bar'></span>
-                        <label htmlFor='companyname'>
+                        <label htmlFor='company_name'>
                           Company Name<strong className='text-danger'>*</strong>
                         </label>
                         <div className='form-text'>{error.comp_name_error}</div>
                       </div>
                     </div>
 
-                    {/* <div className='col-md-6 col-xl-5'>
-                      <div className='form-floating'>
-                        <input
-                          type='text'
-                          className='form-control'
-                          name='vatnumber'
-                          id='vatnumber'
-                          onChange={handleInputChanged}
-                          placeholder='VAT Number'
-                          autoComplete='off'
-                          value={state.vatnumber}
-                        />
-                        <span className='bar'></span>
-                        <label htmlFor='vatnumber'>
-                          VAT Number <strong className='text-danger'>*</strong>
-                        </label>
-                        <div className='form-text'>{error.vatnumberError}</div>
-                      </div>
-                    </div> */}
-                    {/* <div className='col-md-6 col-xl-5'>
-                      <div className='form-floating'>
-                        <input
-                          type='text'
-                          className='form-control'
-                          name='dateofincorporation'
-                          id='dateofincorporation'
-                          onChange={handleInputChanged}
-                          placeholder='date'
-                          autoComplete='off'
-                          value={state.dateofincorporation}
-                        />
-                        <span className='bar'></span>
-                        <label htmlFor='dateofincorporation'>
-                          Date of Incorporation (MM/DD/YY)
-                          <strong className='text-danger'>*</strong>
-                        </label>
-                        <div className='form-text'>
-                          {error.dateofincorporationError}
-                        </div>
-                      </div>
-                    </div> */}
                     <div className='col-md-6 col-xl-5'>
                       <div className='form-floating overflow-hidden'>
                         <input
@@ -610,7 +618,11 @@ const BusinessDetails = () => {
                           onChange={handleInputChanged}
                           placeholder='Legal Address'
                           autoComplete='off'
-                          value={state.trading_address}
+                          value={
+                            state.trading_address == '.'
+                              ? ''
+                              : state.trading_address
+                          }
                         />
                         <span className='bar'></span>
                         <label htmlFor='address1'>
@@ -625,9 +637,9 @@ const BusinessDetails = () => {
                         <select
                           defaultValue={'DEFAULT'}
                           className='form-select form-control'
-                          name='business_classifications'
+                          name='business_classification_type'
                           autoComplete='off'
-                          value={state.business_classifications}
+                          value={state.business_classification_type}
                           id='type'
                           onChange={handleInputChanged}
                           // onChange={handleTypeOfBusiness}
@@ -640,6 +652,7 @@ const BusinessDetails = () => {
                           </option>
                           <option value='hotel'>Hotel/B&B</option>
                           <option value='hair'>Hair & Beauty</option>
+                          <option value='others'>Others</option>
                         </select>
                         <span className='highlight'></span>
                         <span className='bar'></span>
@@ -657,9 +670,9 @@ const BusinessDetails = () => {
                         <select
                           defaultValue={'DEFAULT'}
                           className='form-select form-control'
-                          name='type_of_entity'
+                          name='type_entity'
                           autoComplete='off'
-                          value={state.type_of_entity}
+                          value={state.type_entity}
                           id='type'
                           onChange={handleInputChanged}
                           // onChange={handleTypeOfBusiness}

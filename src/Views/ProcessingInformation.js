@@ -24,33 +24,13 @@ const ProcessingInformation = () => {
   const x = JSON.parse(localStorage.getItem('previous_data'))
 
   const [state, setState] = useState({
-    current_process_company: '',
+    current_processing_company: '',
     monthly_card_sales: '',
-    monthly_cash_sales: '',
-    no_of_terminals: '',
-    no_of_locations: '',
+    gross_monthly_sales: '',
+    no_terminals: '',
+    no_locations: '',
     desired_funding_amount: ''
   })
-
-  useEffect(() => {
-    // if (x) {
-    //   country = x.country_Incorporation;
-    //   setState({
-    //     ...state,
-    //     companynumber: x.company_number,
-    //     dateofincorporation: x.incorporation_date,
-    //     address1: x.address1,
-    //     city: x.city,
-    //     post_code: x.post_code,
-    //     vatnumber: x.vat_number,
-    //     dbalegalname: x.dbalegalname,
-    //     dbaaddress: '',
-    //     websitename: x.website,
-    //     country: x.country_Incorporation,
-    //     company_name: x.company_name,
-    //   });
-    // }
-  }, [])
 
   useEffect(() => {
     console.log('state in bd', state)
@@ -78,17 +58,18 @@ const ProcessingInformation = () => {
     e.preventDefault()
     var validForm = true
     console.log('check', state.country)
-    history.push('/merchant_question')
-    return
 
-    if (!state.current_process_company) {
+    if (
+      !state.current_processing_company ||
+      state.current_processing_company == '.'
+    ) {
       setError({
         ...error,
-        current_process_company_error: 'This field is required.'
+        current_processing_company_error: 'This field is required.'
       })
       validForm = false
     }
-    if (!state.monthly_card_sales) {
+    if (!state.monthly_card_sales || state.monthly_card_sales == '.') {
       setError({
         ...error,
         monthly_card_sales_error: 'This field is required.'
@@ -96,22 +77,22 @@ const ProcessingInformation = () => {
       validForm = false
     }
 
-    if (!state.monthly_cash_sales) {
+    if (!state.gross_monthly_sales || state.gross_monthly_sales == '.') {
       setError({
         ...error,
-        monthly_cash_sales_error: 'This field is required.'
+        gross_monthly_sales_error: 'This field is required.'
       })
       validForm = false
     }
-    if (!state.no_of_terminals) {
-      setError({ ...error, no_of_terminals_error: 'This field is required.' })
+    if (!state.no_terminals || state.no_terminals == '.') {
+      setError({ ...error, no_terminals_error: 'This field is required.' })
       validForm = false
     }
-    if (!state.no_of_locations) {
-      setError({ ...error, no_of_locations_error: 'This field is required.' })
+    if (!state.no_locations || state.no_locations == '.') {
+      setError({ ...error, no_locations_error: 'This field is required.' })
       validForm = false
     }
-    if (!state.desired_funding_amount) {
+    if (!state.desired_funding_amount || state.desired_funding_amount == '.') {
       setError({
         ...error,
         desired_funding_amount_error: 'This field is required.'
@@ -120,8 +101,86 @@ const ProcessingInformation = () => {
     }
 
     if (validForm) {
-      history.push('/merchant_question')
+      var axios = require('axios')
+
+      var data = {
+        id: `${x.id}`,
+
+        current_processing_company: `${state.current_processing_company}`,
+        monthly_card_sales: `${state.monthly_card_sales}`,
+        gross_monthly_sales: `${state.gross_monthly_sales}`,
+        no_terminals: `${state.no_terminals}`,
+        no_locations: `${state.no_locations}`,
+        desired_funding_amount: `${state.desired_funding_amount}`,
+        status: 'incomplete'
+      }
+
+      var config = {
+        method: 'put',
+        url: 'https://hrm.zotto.io/api/processing-information-update',
+        mode: 'no-cors',
+        headers: {
+          Authorization:
+            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        data: data
+      }
+
+      axios(config)
+        .then(function (response) {
+          console.log('response of update', response)
+          toast.success('Records added successfully', {
+            position: 'top-right',
+            autoClose: 1000
+          })
+
+          history.push('/merchant_question')
+        })
+        .catch(function (error) {
+          setState({ ...state, error: error })
+          toast.error('Something went wrong !!', {
+            position: 'top-right',
+            autoClose: 5000
+          })
+        })
     }
+
+    //get
+    var axios = require('axios')
+    const email = JSON.parse(localStorage.getItem('add_user'))
+    const companyId = JSON.parse(localStorage.getItem('company_id'))
+    var data = {
+      company_email: `${email.companyemail}`,
+      company_id: `${companyId}`
+    }
+
+    var config = {
+      method: 'post',
+      mode: 'no-cors',
+      url: 'https://hrm.zotto.io/api/loans-get',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        Authorization:
+          'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ',
+        'Content-Type': 'application/json'
+      },
+      data: data
+    }
+
+    axios(config)
+      .then(function (response) {
+        console.log('response of get', response.data)
+
+        localStorage.setItem(
+          'previous_data',
+          JSON.stringify(response.data.Loans)
+        )
+      })
+      .catch(function (error) {
+        console.log('error of get', error)
+      })
   }
 
   const handleInputChanged = (event) => {
@@ -131,11 +190,11 @@ const ProcessingInformation = () => {
     })
     setError({
       ...error,
-      current_process_company_error: '',
+      current_processing_company_error: '',
       monthly_card_sales_error: '',
-      monthly_cash_sales_error: '',
-      no_of_terminals_error: '',
-      no_of_locations_error: '',
+      gross_monthly_sales_error: '',
+      no_terminals_error: '',
+      no_locations_error: '',
       desired_funding_amount_error: ''
     })
     // const prev_data = JSON.parse(localStorage.getItem('add_user'));
@@ -224,43 +283,37 @@ const ProcessingInformation = () => {
   useEffect(() => {
     // setValues();
     // const x = JSON.parse(localStorage.getItem('business_detail'));
-    // if (x) {
-    //   setState({
-    //     ...state,
-    //     companynumber: x.company_number,
-    //     dateofincorporation: x.incorporation_date,
-    //     address1: x.address1,
-    //     city: x.city,
-    //     post_code: x.post_code,
-    //     vatnumber: x.vat_number,
-    //     dbalegalname: x.dba,
-    //     dbaaddress: x.dbaaddress,
-    //     dbaaddress1: x.dbaaddress1,
-    //     dbaaddress2: x.dbaaddress1,
-    //     dbacity: x.dbacity,
-    //     websitename: x.websitename,
-    //     country: x.country_Incorporation,
-    //     company_name: x.company_name,
-    //   });
-    // } else {
-    //   setState({
-    //     ...state,
-    //     companynumber: '',
-    //     dateofincorporation: '',
-    //     address1: '',
-    //     city: '',
-    //     post_code: '',
-    //     vatnumber: '',
-    //     dbalegalname: '',
-    //     dbaaddress: '',
-    //     dbaaddress1: '',
-    //     dbaaddress2: '',
-    //     dbacity: '',
-    //     websitename: '',
-    //     country: '',
-    //     company_name: '',
-    //   });
+    const y = JSON.parse(localStorage.getItem('isLoggedIn'))
+    console.log('y is', y)
+    console.log('y is', restrict)
+    y == 0 ? setrestrict(true) : setrestrict(false)
+    // if (y == 0) {
+    //   setrestrict(true);
+    // } else if (y == 1) {
+    //   setrestrict(false);
     // }
+    console.log('x is', x)
+    if (x) {
+      setState({
+        ...state,
+        current_processing_company: x.current_processing_company,
+        monthly_card_sales: x.monthly_card_sales,
+        gross_monthly_sales: x.gross_monthly_sales,
+        no_terminals: x.no_terminals,
+        no_locations: x.no_locations,
+        desired_funding_amount: x.desired_funding_amount
+      })
+    } else {
+      setState({
+        ...state,
+        current_processing_company: '',
+        monthly_card_sales: '',
+        gross_monthly_sales: '',
+        no_terminals: '',
+        no_locations: '',
+        desired_funding_amount: ''
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -278,7 +331,7 @@ const ProcessingInformation = () => {
             <div className='row justify-content-center align-items-center h-100'>
               <div className='col-sm-12 py-4'>
                 <div className='text-center steping'>
-                  <span>Step 5 of 6</span>
+                  <span>Step 5 of 7</span>
                 </div>
                 <div
                   onClick={() => history.push('/business_property')}
@@ -315,21 +368,25 @@ const ProcessingInformation = () => {
                         <input
                           type='text'
                           className='form-control'
-                          name='current_process_company'
-                          id='current_process_company'
+                          name='current_processing_company'
+                          id='current_processing_company'
                           onChange={handleInputChanged}
                           // onBlur={getCompanyData}
                           placeholder='Company Number'
                           autoComplete='off'
-                          value={state.current_process_company}
+                          value={
+                            state.current_processing_company == '.'
+                              ? ''
+                              : state.current_processing_company
+                          }
                         />
                         <span className='bar'></span>
-                        <label htmlFor='current_process_company'>
+                        <label htmlFor='current_processing_company'>
                           Current Processing Company
                           <strong className='text-danger'>*</strong>
                         </label>
                         <div className='form-text'>
-                          {error.current_process_company_error}
+                          {error.current_processing_company_error}
                         </div>
                       </div>
                     </div>
@@ -344,7 +401,11 @@ const ProcessingInformation = () => {
                           onChange={handleInputChanged}
                           placeholder='Company Name'
                           autoComplete='off'
-                          value={state.monthly_card_sales}
+                          value={
+                            state.monthly_card_sales == '.'
+                              ? ''
+                              : state.monthly_card_sales
+                          }
                         />
                         <span className='bar'></span>
                         <label htmlFor='monthly_card_sales'>
@@ -362,12 +423,16 @@ const ProcessingInformation = () => {
                         <input
                           type='text'
                           className='form-control'
-                          name='monthly_cash_sales'
+                          name='gross_monthly_sales'
                           id='address1'
                           onChange={handleInputChanged}
                           placeholder='Legal Address'
                           autoComplete='off'
-                          value={state.monthly_cash_sales}
+                          value={
+                            state.gross_monthly_sales == '.'
+                              ? ''
+                              : state.gross_monthly_sales
+                          }
                         />
                         <span className='bar'></span>
                         <label htmlFor='address1'>
@@ -375,7 +440,7 @@ const ProcessingInformation = () => {
                           <strong className='text-danger'>*</strong>
                         </label>
                         <div className='form-text'>
-                          {error.monthly_cash_sales_error}
+                          {error.gross_monthly_sales_error}
                         </div>
                       </div>
                     </div>
@@ -384,12 +449,14 @@ const ProcessingInformation = () => {
                         <input
                           type='text'
                           className='form-control'
-                          name='no_of_terminals'
+                          name='no_terminals'
                           id='address1'
                           onChange={handleInputChanged}
                           placeholder='Legal Address'
                           autoComplete='off'
-                          value={state.no_of_terminals}
+                          value={
+                            state.no_terminals == '.' ? '' : state.no_terminals
+                          }
                         />
                         <span className='bar'></span>
                         <label htmlFor='address1'>
@@ -397,7 +464,7 @@ const ProcessingInformation = () => {
                           <strong className='text-danger'>*</strong>
                         </label>
                         <div className='form-text'>
-                          {error.no_of_terminals_error}
+                          {error.no_terminals_error}
                         </div>
                       </div>
                     </div>
@@ -406,12 +473,14 @@ const ProcessingInformation = () => {
                         <input
                           type='text'
                           className='form-control'
-                          name='no_of_locations'
+                          name='no_locations'
                           id='address1'
                           onChange={handleInputChanged}
                           placeholder='Legal Address'
                           autoComplete='off'
-                          value={state.no_of_locations}
+                          value={
+                            state.no_locations == '.' ? '' : state.no_locations
+                          }
                         />
                         <span className='bar'></span>
                         <label htmlFor='address1'>
@@ -419,7 +488,7 @@ const ProcessingInformation = () => {
                           <strong className='text-danger'>*</strong>
                         </label>
                         <div className='form-text'>
-                          {error.no_of_locations_error}
+                          {error.no_locations_error}
                         </div>
                       </div>
                     </div>
@@ -434,7 +503,11 @@ const ProcessingInformation = () => {
                           onChange={handleInputChanged}
                           placeholder='Legal Address'
                           autoComplete='off'
-                          value={state.desired_funding_amount}
+                          value={
+                            state.desired_funding_amount == '.'
+                              ? ''
+                              : state.desired_funding_amount
+                          }
                         />
                         <span className='bar'></span>
                         <label htmlFor='address1'>

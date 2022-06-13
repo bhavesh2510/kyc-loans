@@ -1,44 +1,45 @@
-import React, { Component } from 'react';
-import Service from '../services/service';
-import SignatureCanvas from 'react-signature-canvas';
-import localforage from 'localforage';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { createReadStream } from 'fs';
-import RestrictUser from './RestrictUser';
-toast.configure();
+import React, { Component } from 'react'
+import Service from '../services/service'
+import SignatureCanvas from 'react-signature-canvas'
+import localforage from 'localforage'
+import { toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import { createReadStream } from 'fs'
+import RestrictUser from './RestrictUser'
+toast.configure()
 
-var fileExt = ['pdf', 'doc', 'jpeg', 'jpg', 'png'];
-let ShareholderFilesArr = [];
-let residentialFilesArr = [];
-let registerFilesArr = [];
-let bankFilesArr = [];
-let signatureFilesArr = [];
+var fileExt = ['pdf', 'doc', 'jpeg', 'jpg', 'png']
+
+let bankFilesArr = []
+let cardFilesArr = []
+let signatureFilesArr = []
+let signatureFiles_2Arr = []
 class DocumentsDeclaration extends Component {
   constructor(props) {
-    super(props);
+    super(props)
     // create a ref to store the DOM element
-    this.nameEl = React.createRef();
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.uploadRegistration = this.uploadRegistration.bind(this);
-    this.uploadBankAccount = this.uploadBankAccount.bind(this);
-    this.uploadSignature = this.uploadSignature.bind(this);
-    this.uploadResidential = this.uploadResidential.bind(this);
-    this.uploadShareholder = this.uploadShareholder.bind(this);
-    this.handleInputChanged = this.handleInputChanged.bind(this);
-    this.removeShareholder = this.removeShareholder.bind(this);
-    this.removeResidential = this.removeResidential.bind(this);
-    this.removeRegister = this.removeRegister.bind(this);
-    this.removeBankFile = this.removeBankFile.bind(this);
-    this.removeSignature = this.removeSignature.bind(this);
+    this.nameEl = React.createRef()
+    this.handleSubmit = this.handleSubmit.bind(this)
 
-    const y = JSON.parse(localStorage.getItem('isLoggedIn'));
+    this.uploadBankStatement = this.uploadBankStatement.bind(this)
+    this.cardStatementUpload = this.cardStatementUpload.bind(this)
+    this.uploadSignature = this.uploadSignature.bind(this)
+    this.uploadSignature_2 = this.uploadSignature_2.bind(this)
+    this.handleInputChanged = this.handleInputChanged.bind(this)
+    this.removeBankFile = this.removeBankFile.bind(this)
+    this.removeSignature = this.removeSignature.bind(this)
+    this.removeSignature_2 = this.removeSignature_2.bind(this)
+    this.removeCard = this.removeCard.bind(this)
+
+    const y = JSON.parse(localStorage.getItem('isLoggedIn'))
     this.state = {
       restrict: y == 0 ? true : false,
       shareholderFile: null,
       registrationFile: null,
       bankFile: null,
+      cardFile: null,
       signatureFile: null,
+      signatureFile_2: null,
       residentialFile: null,
       declaration: false,
       shareholder_name: '',
@@ -46,55 +47,45 @@ class DocumentsDeclaration extends Component {
       filesShareHolder: '',
       filesResidential: '',
 
-      name: '',
-    };
+      name: ''
+    }
   }
 
   handleSubmit(e) {
-    e.preventDefault();
-    const { history } = this.props;
+    e.preventDefault()
+    const { history } = this.props
 
-    console.log('complete docs', this.state);
-    const x = JSON.parse(localStorage.getItem('previous_data'));
+    console.log('complete docs', this.state)
+    const x = JSON.parse(localStorage.getItem('previous_data'))
 
-    var id = JSON.parse(localStorage.getItem('kyc_id'));
-    var validForm = true;
-    if (!this.state.registrationFile) {
-      this.setState({ registrationFileError: 'This field is required.' });
-      validForm = false;
-    }
-    if (!this.state.signatureFile) {
-      this.setState({ signatureFileError: 'This field is required.' });
+    var id = JSON.parse(localStorage.getItem('kyc_id'))
+    var validForm = true
+
+    if (
+      !this.state.shareholder_name ||
+      /\d/.test(this.state.shareholder_name)
+    ) {
+      validForm = false
+
+      this.setState({ shareholder_nameError: 'This field is required.' })
     }
     if (!this.state.bankFile) {
-      this.setState({ bankFileError: 'This field is required.' });
-      validForm = false;
+      this.setState({ bankFileError: 'This field is required.' })
+      validForm = false
     }
-    if (!this.state.filesShareHolder) {
-      this.setState({ shareholderFileError: 'This field is required.' });
-      validForm = false;
+    if (!this.state.cardFile) {
+      this.setState({ cardFileError: 'This field is required.' })
+      validForm = false
     }
-    if (!this.state.filesResidential) {
-      this.setState({ residentialFileError: 'This field is required.' });
-      validForm = false;
+    if (!this.state.signatureFile) {
+      this.setState({ signatureFileError: 'This field is required.' })
+      validForm = false
     }
     if (!this.state.declaration) {
-      this.setState({ declarationError: 'This field is required.' });
-      validForm = false;
-    }
-    if (!this.state.shareholder_name) {
-      this.setState({ shareholder_nameError: 'This field is required.' });
-      validForm = false;
-    }
-    if (!this.state.shareholder_name) {
-      this.setState({ shareholder_nameError: 'This field is required.' });
-      validForm = false;
+      this.setState({ declarationError: 'This field is required.' })
+      validForm = false
     }
 
-    if (/\d/.test(this.state.shareholder_name)) {
-      this.setState({ shareholder_nameError: 'Please enter a valid name.' });
-      validForm = false;
-    }
     // if (this.sigPad.isEmpty()) {
     //   this.setState({ sigPadError: 'This field is required.' });
     //   validForm = false;
@@ -102,57 +93,47 @@ class DocumentsDeclaration extends Component {
     if (validForm) {
       //var sign = this.sigPad.getTrimmedCanvas().toDataURL('image/png');
 
-      var myHeaders = new Headers();
+      var myHeaders = new Headers()
       myHeaders.append(
         'Authorization',
         'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJhdWQiOiJodHRwOlwvXC9sb2NhbGhvc3QiLCJpYXQiOjE2MjE1MzYxMTMsIm5iZiI6MTYyMTUzNjExMywiZXhwIjoxNjIxNjIyNTEzLCJwYXlsb2FkIjp7ImlkIjoiMTYyMDU3MzM5OTIxOSJ9fQ.G7cyNtmMsbWsMNC2NvCJSm4X9uGnSM--o4uTMxrvMdQ'
-      );
+      )
 
-      var formdata = new FormData();
-      formdata.append(
-        'copycompanyreg',
-        this.state.registrationFile[0],
-        '[PROXY]'
-      );
-      formdata.append('proofcompanybank', this.state.bankFile[0], '[PROXY]');
-      formdata.append(
-        'passportshareholder',
-        this.state.filesShareHolder[0],
-        '[PROXY]'
-      );
-      formdata.append(
-        'addressproofshareholder',
-        this.state.filesResidential[0],
-        '[PROXY]'
-      );
-      formdata.append('signature', this.state.signatureFile[0], '[PROXY]');
-      formdata.append('name', `${this.state.shareholder_name}`);
-      formdata.append('id', `${x.id}`);
-      formdata.append('status', 'complete');
+      var formdata = new FormData()
+
+      formdata.append('proofbankstatement', this.state.bankFile[0])
+      formdata.append('proofcardstatement', this.state.cardFile[0])
+      formdata.append('applicantsignature', this.state.signatureFile[0])
+      formdata.append('name', `${this.state.shareholder_name}`)
+      formdata.append('id', `${x.id}`)
+      formdata.append('status', 'complete')
 
       var requestOptions = {
         method: 'POST',
         headers: myHeaders,
         body: formdata,
-        redirect: 'follow',
-      };
+        redirect: 'follow'
+      }
 
-      fetch('http://hrm.zotto.io/api/upload', requestOptions)
+      fetch(
+        'https://hrm.zotto.io/api/documents-declaration-upload',
+        requestOptions
+      )
         .then((response) => response.text())
         .then((result) => {
           toast.success('Successfully Added', {
             position: 'top-right',
-            autoClose: 5000,
-          });
+            autoClose: 5000
+          })
 
-          history.push('/kyc_success');
+          history.push('/kyc_success')
         })
         .catch((error) => {
           toast.error('Something went wrong', {
             position: 'top-right',
-            autoClose: 5000,
-          });
-        });
+            autoClose: 5000
+          })
+        })
 
       // if (this.state.registrationFile) {
       //   for (const key of Object.keys(this.state.registrationFile)) {
@@ -216,207 +197,164 @@ class DocumentsDeclaration extends Component {
     }
   }
 
-  uploadRegistration(e) {
-    var id = JSON.parse(localStorage.getItem('kyc_id'));
-    registerFilesArr = [];
-    const files = e.target.files;
-    for (let i = 0; i < files.length; i++) {
-      let ext = files[i].name.split('.').pop();
-      if (!fileExt.includes(ext.toLowerCase())) {
-        this.setState({
-          registrationFile: '',
-          registrationFileError:
-            'Please upload file in pdf, doc, jpeg, jpg, png format.',
-        });
-        return false;
-      } else {
-        registerFilesArr.push(files[0]);
-      }
-    }
-    this.setState({ registrationFile: files, registrationFileError: '' });
-    console.log('files is', files[0]);
-
-    console.log('document state', this.state.registrationFile);
-  }
-
-  removeRegister() {
-    registerFilesArr = [];
-    this.setState({ registrationFile: '' });
-  }
-
   removeSignature() {
-    signatureFilesArr = [];
-    this.setState({ signatureFile: '' });
+    signatureFilesArr = []
+    this.setState({ signatureFile: '' })
   }
-
-  uploadBankAccount(e) {
-    bankFilesArr = [];
-    const files = e.target.files;
+  removeSignature_2() {
+    signatureFiles_2Arr = []
+    this.setState({ signatureFile_2: '' })
+  }
+  removeCard() {
+    cardFilesArr = []
+    this.setState({ cardFile: '' })
+  }
+  uploadBankStatement(e) {
+    bankFilesArr = []
+    const files = e.target.files
     for (let i = 0; i < files.length; i++) {
-      let ext = files[i].name.split('.').pop();
+      let ext = files[i].name.split('.').pop()
       if (!fileExt.includes(ext.toLowerCase())) {
         this.setState({
           bankFile: '',
           bankFileError:
-            'Please upload file in pdf, doc, jpeg, jpg, png format.',
-        });
-        return false;
+            'Please upload file in pdf, doc, jpeg, jpg, png format.'
+        })
+        return false
+      } else if (files[0].size >= 8388608) {
+        this.setState({
+          bankFile: '',
+          bankFileError: 'Max upload size is 8 MB..'
+        })
+        return false
       } else {
-        bankFilesArr.push(files[0]);
+        bankFilesArr.push(files[0])
       }
     }
-    this.setState({ bankFile: files, bankFileError: '' });
+    this.setState({ bankFile: files, bankFileError: '' })
+  }
+
+  cardStatementUpload(e) {
+    cardFilesArr = []
+    const files = e.target.files
+    for (let i = 0; i < files.length; i++) {
+      let ext = files[i].name.split('.').pop()
+      if (!fileExt.includes(ext.toLowerCase())) {
+        this.setState({
+          cardFile: '',
+          cardFileError:
+            'Please upload file in pdf, doc, jpeg, jpg, png format.'
+        })
+        return false
+      } else if (files[0].size >= 8388608) {
+        this.setState({
+          cardFile: '',
+          cardFileError: 'Max upload size is 8 MB..'
+        })
+        return false
+      } else {
+        cardFilesArr.push(files[0])
+      }
+    }
+    this.setState({ cardFile: files, cardFileError: '' })
   }
 
   uploadSignature(e) {
-    signatureFilesArr = [];
-    const files = e.target.files;
+    signatureFilesArr = []
+    const files = e.target.files
     for (let i = 0; i < files.length; i++) {
-      let ext = files[i].name.split('.').pop();
+      let ext = files[i].name.split('.').pop()
       if (!fileExt.includes(ext.toLowerCase())) {
         this.setState({
           signatureFile: '',
           signatureFileError:
-            'Please upload file in pdf, doc, jpeg, jpg, png format.',
-        });
-        return false;
+            'Please upload file in pdf, doc, jpeg, jpg, png format.'
+        })
+        return false
+      } else if (files[0].size >= 8388608) {
+        this.setState({
+          signatureFile: '',
+          signatureFileError: 'Max upload size is 8 MB..'
+        })
+        return false
       } else {
-        signatureFilesArr.push(files[0]);
+        signatureFilesArr.push(files[0])
       }
     }
-    console.log('files in sign', files);
-    this.setState({ signatureFile: files, signatureFileError: '' });
+    console.log('files in sign', files)
+    this.setState({ signatureFile: files, signatureFileError: '' })
+  }
+  uploadSignature_2(e) {
+    signatureFiles_2Arr = []
+    const files = e.target.files
+    for (let i = 0; i < files.length; i++) {
+      let ext = files[i].name.split('.').pop()
+      if (!fileExt.includes(ext.toLowerCase())) {
+        this.setState({
+          signatureFile_2: '',
+          signatureFile_2Error:
+            'Please upload file in pdf, doc, jpeg, jpg, png format.'
+        })
+        return false
+      } else {
+        signatureFiles_2Arr.push(files[0])
+      }
+    }
+    console.log('files in sign', files)
+    this.setState({ signatureFile_2: files, signatureFile_2Error: '' })
   }
 
   removeBankFile() {
-    bankFilesArr = [];
-    this.setState({ bankFile: '' });
-  }
-
-  uploadShareholder(e) {
-    var countlenght = ShareholderFilesArr.length;
-    const files = e.target.files;
-    if (countlenght < 4 && files.length + countlenght <= 4) {
-      if (files.length > 4) {
-        this.setState({
-          shareholderFile: '',
-          shareholderFileError: 'Please upload max 4 files.',
-        });
-        return false;
-      }
-      for (let i = 0; i < files.length; i++) {
-        let ext = files[i].name.split('.').pop();
-        if (!fileExt.includes(ext.toLowerCase())) {
-          this.setState({
-            shareholderFile: '',
-            shareholderFileError:
-              'Please upload file in pdf, doc, jpeg, jpg, png format.',
-          });
-          return false;
-        } else {
-          ShareholderFilesArr.push(files[i]);
-        }
-      }
-      this.setState({
-        shareholderFile: files,
-        shareholderFileError: '',
-        filesShareHolder: ShareholderFilesArr,
-      });
-    } else {
-      alert('Max 4 files can be uploaded');
-    }
-  }
-  removeShareholder(e, index) {
-    ShareholderFilesArr.splice(index, 1);
-    this.setState({ filesShareHolder: ShareholderFilesArr });
-  }
-
-  uploadResidential(e) {
-    var countlenght = residentialFilesArr.length;
-    const files = e.target.files;
-    if (countlenght < 4 && files.length + countlenght <= 4) {
-      if (files.length > 4) {
-        document.getElementById('residentialFileView').innerHTML = '';
-        this.setState({
-          residentialFile: '',
-          residentialFileError: 'Please upload max 4 files.',
-        });
-        return false;
-      }
-      for (let i = 0; i < files.length; i++) {
-        let ext = files[i].name.split('.').pop();
-        if (!fileExt.includes(ext.toLowerCase())) {
-          this.setState({
-            residentialFile: '',
-            residentialFileError:
-              'Please upload file in pdf, doc, jpeg, jpg, png format.',
-          });
-          return false;
-        } else {
-          residentialFilesArr.push(files[i]);
-        }
-      }
-      this.setState({
-        residentialFile: files,
-        residentialFileError: '',
-        filesResidential: residentialFilesArr,
-      });
-    } else {
-      alert('Max 4 files can be uploaded');
-    }
-  }
-
-  removeResidential(e, index) {
-    residentialFilesArr.splice(index, 1);
-    this.setState({ filesResidential: residentialFilesArr });
+    bankFilesArr = []
+    this.setState({ bankFile: '' })
   }
 
   handleInputChanged(e) {
-    const target = e.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.name;
+    const target = e.target
+    const value = target.type === 'checkbox' ? target.checked : target.value
+    const name = target.name
 
     this.setState({
-      [name]: value,
-    });
+      [name]: value
+    })
 
     this.setState({
       declarationError: '',
       shareholder_nameError: '',
-      sigPadError: '',
-    });
+      sigPadError: ''
+    })
   }
 
-  sigPad = {};
+  sigPad = {}
   clear = () => {
-    this.sigPad.clear();
-  };
+    this.sigPad.clear()
+  }
 
   componentDidMount() {
-    ShareholderFilesArr = [];
-    residentialFilesArr = [];
-    registerFilesArr = [];
-    bankFilesArr = [];
-
-    const x = JSON.parse(localStorage.getItem('docs'));
-    console.log('x is', x);
-    if (x) {
-      this.setState({
-        shareholderFile: x.shareholderFile,
-        registrationFile: x.registrationFile,
-        bankFile: x.bankFile,
-        residentialFile: x.residentialFile,
-        declaration: x.declaration,
-        shareholder_name: x.shareholder_name,
-        signature: x.signature,
-        filesShareHolder: x.filesShareHolder,
-        filesResidential: x.filesResidential,
-      });
-    }
+    //   ShareholderFilesArr = []
+    //   residentialFilesArr = []
+    //   registerFilesArr = []
+    //   bankFilesArr = []
+    //   const x = JSON.parse(localStorage.getItem('docs'))
+    //   console.log('x is', x)
+    //   if (x) {
+    //     this.setState({
+    //       shareholderFile: x.shareholderFile,
+    //       registrationFile: x.registrationFile,
+    //       bankFile: x.bankFile,
+    //       residentialFile: x.residentialFile,
+    //       declaration: x.declaration,
+    //       shareholder_name: x.shareholder_name,
+    //       signature: x.signature,
+    //       filesShareHolder: x.filesShareHolder,
+    //       filesResidential: x.filesResidential
+    //     })
+    //   }
   }
 
   componentDidUpdate(state) {
-    localStorage.setItem('docs', JSON.stringify(state));
+    console.log('state is', this.state)
+    localStorage.setItem('docs', JSON.stringify(state))
   }
 
   render() {
@@ -428,13 +366,13 @@ class DocumentsDeclaration extends Component {
           <div className='content-box'>
             <div className='container-fluid h-100'>
               <div className='row justify-content-center align-items-center h-100'>
-                <div className='col-sm-12 py-4'>
+                <div className='col-sm-12 py-4' style={{ marginTop: '5%' }}>
                   <div className='text-center steping'>
-                    <span>Step 6 of 6</span>
+                    <span>Step 7 of 7</span>
                   </div>
                   <div
                     onClick={() =>
-                      this.props.history.push('/ownership_details')
+                      this.props.history.push('/merchant_question')
                     }
                     className='text-center steping'
                     style={{ marginLeft: '80%', cursor: 'pointer' }}
@@ -448,40 +386,7 @@ class DocumentsDeclaration extends Component {
                     <div className='row justify-content-center g-3'>
                       <div className='col-md-6 col-xl-5'>
                         <p className='mb-1 field-text'>
-                          Copy of Company Registration{' '}
-                          <strong className='text-danger'>*</strong>
-                        </p>
-                        <label className='drop-input'>
-                          <input
-                            type='file'
-                            name='registrationFile'
-                            id='file1'
-                            onChange={this.uploadRegistration}
-                          />
-                          <div className='text-muted small'>
-                            Drag & Drop (or){' '}
-                            <span className='text-primary'>Choose File</span>
-                          </div>
-                        </label>
-                        <div className='form-text'>
-                          {this.state.registrationFileError}
-                        </div>
-                        {this.state.registrationFile
-                          ? registerFilesArr.map((register, i) => (
-                              <div key={i}>
-                                <div className='filesname'>
-                                  <span onClick={this.removeRegister}>
-                                    &times;
-                                  </span>
-                                  {register.name}
-                                </div>
-                              </div>
-                            ))
-                          : ''}
-                      </div>
-                      <div className='col-md-6 col-xl-5'>
-                        <p className='mb-1 field-text'>
-                          Proof Of Company Bank Account{' '}
+                          Proof Of Bank Statement{' '}
                           <strong className='text-danger'>*</strong>
                         </p>
                         <label className='drop-input'>
@@ -489,7 +394,7 @@ class DocumentsDeclaration extends Component {
                             type='file'
                             name='bankFile'
                             id='file2'
-                            onChange={this.uploadBankAccount}
+                            onChange={this.uploadBankStatement}
                           />
                           <div className='text-muted small'>
                             Drag & Drop (or){' '}
@@ -500,10 +405,7 @@ class DocumentsDeclaration extends Component {
                           {this.state.bankFileError}
                         </div>
                         <div className='text-muted small fst-italic lh-sm'>
-                          It should contain Name, address, account number, IBAN,
-                          Swift code. If it is a a screenshot of the account
-                          from computer, the web address must be visible. The
-                          account balance visibility is not necessary.
+                          Minimum 6 months card trading history
                         </div>
                         {this.state.bankFile
                           ? bankFilesArr.map((bankfile, i) => (
@@ -518,104 +420,43 @@ class DocumentsDeclaration extends Component {
                             ))
                           : ''}
                       </div>
+
                       <div className='col-md-6 col-xl-5'>
                         <p className='mb-1 field-text'>
-                          Passport Copy of Shareholder
+                          Proof of Card Statement
                           <strong className='text-danger'>*</strong>
-                          <strong
-                            className='float-end bg-light px-2 d-inline-block text-muted rounded-pill fs-12px'
-                            title='In this field, it should be possible to upload max 4 files'
-                          >
-                            i
-                          </strong>
                         </p>
                         <label className='drop-input'>
                           <input
                             type='file'
-                            name='shareholderFile'
-                            id='uploadShareholder'
-                            onChange={this.uploadShareholder}
-                            multiple
+                            name='cardFile'
+                            id='file3'
+                            onChange={this.cardStatementUpload}
                           />
                           <div className='text-muted small'>
                             Drag & Drop (or){' '}
-                            <span className='text-primary'>Choose File(s)</span>
+                            <span className='text-primary'>Choose File</span>
                           </div>
                         </label>
                         <div className='form-text'>
-                          {this.state.shareholderFileError}
+                          {this.state.cardFileError}
                         </div>
-                        <div className='text-muted small fst-italic'>
-                          Copy of all the shareholders who own more than 25%.
-                        </div>
-                        {this.state.shareholderFile
-                          ? ShareholderFilesArr.map((sharefiles, i) => (
+
+                        {this.state.cardFile
+                          ? cardFilesArr.map((signaturefile, i) => (
                               <div key={i}>
                                 <div className='filesname'>
-                                  <span
-                                    onClick={(e) =>
-                                      this.removeShareholder(e, i)
-                                    }
-                                  >
-                                    &times;
-                                  </span>
-                                  {sharefiles.name}
+                                  <span onClick={this.removeCard}>&times;</span>
+                                  {signaturefile.name}
                                 </div>
                               </div>
                             ))
                           : ''}
                       </div>
+
                       <div className='col-md-6 col-xl-5'>
                         <p className='mb-1 field-text'>
-                          Residential Address Proof of Shareholders.
-                          <strong className='text-danger'>*</strong>
-                          <strong
-                            className='float-end bg-light px-2 d-inline-block text-muted rounded-pill fs-12px'
-                            title='In this field, it should be possible to upload max 4 files'
-                          >
-                            i
-                          </strong>
-                        </p>
-                        <label className='drop-input'>
-                          <input
-                            type='file'
-                            name='residentialFile'
-                            id='residentialFile'
-                            onChange={this.uploadResidential}
-                            multiple
-                          />
-                          <div className='text-muted small'>
-                            Drag & Drop (or){' '}
-                            <span className='text-primary'>Choose File(s)</span>
-                          </div>
-                        </label>
-                        <div className='form-text'>
-                          {this.state.residentialFileError}
-                        </div>
-                        <div className='text-muted small fst-italic'>
-                          The document should not be older than 3 months. Copy
-                          of all the Shareholders who own more than 25%.
-                        </div>
-                        {this.state.residentialFile
-                          ? residentialFilesArr.map((resifiles, i) => (
-                              <div key={i}>
-                                <div className='filesname'>
-                                  <span
-                                    onClick={(e) =>
-                                      this.removeResidential(e, i)
-                                    }
-                                  >
-                                    &times;
-                                  </span>
-                                  {resifiles.name}
-                                </div>
-                              </div>
-                            ))
-                          : ''}
-                      </div>
-                      <div className='col-md-6 col-xl-5'>
-                        <p className='mb-1 field-text'>
-                          Signature
+                          Signature of Applicant
                           <strong className='text-danger'>*</strong>
                         </p>
                         <label className='drop-input'>
@@ -646,33 +487,9 @@ class DocumentsDeclaration extends Component {
                               </div>
                             ))
                           : ''}
+                      </div>
 
-                        {/* <p className='mb-1 field-text'>
-                      Signature <strong className='text-danger'>*</strong>
-                    </p>
-                    <div className='position-relative'>
-                      <div className='signature-container'>
-                        <SignatureCanvas
-                          penColor='black'
-                          canvasProps={{ className: 'sigPad' }}
-                          ref={(ref) => {
-                            this.sigPad = ref;
-                          }}
-                          onBegin={this.handleInputChanged}
-                        />
-                        <button
-                          type='button'
-                          className='btn btn-sm btn-link text-decoration-none'
-                          id='signature_clearButton'
-                          onClick={this.clear}
-                        >
-                          Clear
-                        </button>
-                      </div>
-                      <div className='form-text'>{this.state.sigPadError}</div>
-                    </div> */}
-                      </div>
-                      <div className='col-md-6 col-xl-5'>
+                      <div className='col-md-6 col-xl-10'>
                         <p className='mb-1 field-text'>
                           Declaration <strong className='text-danger'>*</strong>
                         </p>
@@ -689,15 +506,44 @@ class DocumentsDeclaration extends Component {
                             className='form-check-label small'
                             htmlFor='defaultCheck1'
                           >
-                            The undersigned hereby accepts this binding 24
-                            months contract and agreement and is aware & agrees
-                            with ZOTTO LTD.
+                            The Applicant(s) certify that all documents and
+                            information submitted in connection with this
+                            application are true, correct and complete.
+                            Furthermore, the Applicant(s) authorise Zotto
+                            Limited, its assigns and agents to, obtain trade,
+                            landlord, credit, card transaction processing and
+                            bank information relating to us, our directors and
+                            officers, members and any of the undersigned
+                            guarantors, and financial associates and other
+                            individuals, from vendors, suppliers, landlords /
+                            mortgagees, credit reference agencies, card
+                            transaction processors, banks and creditors. This
+                            information will be used exclusively for the
+                            purposes of (i) considering the entry into of a
+                            credit and debit card receivables acquisition
+                            agreement with Zotto Limited, and (ii) monitoring
+                            our performance during the life of such acquisition
+                            agreement, and (iii) collection activities by
+                            authorised agents in case of default. The personal
+                            information we have collected from you will be
+                            shared with fraud prevention agencies who will use
+                            it to prevent fraud and money-laundering and to
+                            verify your identity. If fraud is detected, you
+                            could be refused certain services, funding, or
+                            employment.further details of how your information
+                            will be used by us and these fraud prevention
+                            agencies, and your data protection rights, can be
+                            obtained directly from Zotto.Your terms and
+                            conditions go here...
                           </label>
                           <div className='form-text'>
                             {this.state.declarationError}
                           </div>
                         </div>
-                        <div className='form-floating mt-3 mt-md-4'>
+                        <div
+                          className='form-floating mt-3 mt-md-4'
+                          style={{ width: '50%' }}
+                        >
                           <input
                             type='text'
                             name='shareholder_name'
@@ -718,7 +564,7 @@ class DocumentsDeclaration extends Component {
                         </div>
                       </div>
 
-                      {/* <div className="col-md-6 col-xl-5"></div> */}
+                      {/* <div className='col-md-6 col-xl-5'></div> */}
                       <div className='col-md-12 col-xl-5'>
                         <input
                           type='submit'
@@ -735,7 +581,7 @@ class DocumentsDeclaration extends Component {
           </div>
         )}
       </>
-    );
+    )
   }
 }
-export default DocumentsDeclaration;
+export default DocumentsDeclaration
